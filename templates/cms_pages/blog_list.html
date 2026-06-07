@@ -1,0 +1,76 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}Blog - Sarab{% endblock %}
+{% block nav_blog %}active{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="container">
+    <span class="slbl">News &amp; Stories</span>
+    <h1 class="stitle">Our Latest <span>Blog</span></h1>
+    <div class="sline" style="margin:12px auto;"></div>
+    <p class="sdesc">Food stories, recipes, nutrition tips and behind-the-scenes from our kitchen.</p>
+  </div>
+</div>
+<section style="padding:65px 0;background:var(--cream);">
+  <div class="container">
+    {% if posts %}
+    <div class="row g-4">
+      {% for post in posts %}
+      <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="{{ forloop.counter0 }}0">
+        <div class="blcard">
+          <div class="blimg">
+            {% if post.image %}<img src="{{ post.image.url }}" alt="{{ post.title }}"/>
+            {% else %}<img src="{% static 'img/blog/' %}{% cycle '1' '2' '3' %}.jpg" alt="{{ post.title }}" onerror="this.src='{% static 'img/about1.jpg' %}'"/>{% endif %}
+            {% if post.published_at %}<div class="bldatebdg"><span class="bd">{{ post.published_at|date:"d" }}</span><span class="bm">{{ post.published_at|date:"M" }}</span></div>{% endif %}
+          </div>
+          <div class="blbody">
+            <div class="bltag">{{ post.category }}</div>
+            <div class="bltit"><a href="{% url 'blog_detail' post.slug %}">{{ post.title }}</a></div>
+            <p style="color:#888;font-size:.84rem;line-height:1.65;margin-bottom:14px;">{{ post.excerpt|truncatewords:20 }}</p>
+            <div class="blmeta">
+              <span><i class="fas fa-user"></i>{{ post.author }}</span>
+              <span><i class="fas fa-comment"></i>{{ post.comment_count }} Comments</span>
+            </div>
+            <a href="{% url 'blog_detail' post.slug %}" class="blmore">Read More <i class="fas fa-arrow-right"></i></a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <!-- Static fallback posts -->
+    <div class="row g-4">
+      {% for n in "123456" %}
+      <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="{{ forloop.counter0 }}0">
+        <div class="blcard">
+          <div class="blimg">
+            <img src="{% static 'img/blog/' %}{% cycle '1' '2' '3' %}.jpg" alt="" onerror="this.src='{% static 'img/about1.jpg' %}'"/>
+            <div class="bldatebdg">
+              <span class="bd">{% cycle '14' '28' '05' '19' '07' '22' %}</span>
+              <span class="bm">{% cycle 'Mar' 'Feb' 'Jan' 'Dec' 'Nov' 'Oct' %}</span>
+            </div>
+          </div>
+          <div class="blbody">
+            <div class="bltag">{% cycle 'Food & Health' 'Food Science' 'Recipes' 'Behind the Scenes' 'Nutrition' "Chef's Corner" %}</div>
+            <div class="bltit"><a href="{% url 'blog_list' %}">
+              {% if n == "1" %}Healthy Fast Food: A Myth or Beautiful Reality
+              {% elif n == "2" %}Is Fast Food Getting Healthier? Here's What We Found
+              {% elif n == "3" %}The Secret Behind Our Award-Winning Smash Burger
+              {% elif n == "4" %}Farm to Table: How We Source Our Ingredients
+              {% elif n == "5" %}5 Nutritionist-Approved Fast Food Swaps
+              {% else %}Innovative Chickpeas Crackers Recipe at Home{% endif %}
+            </a></div>
+            <div class="blmeta">
+              <span><i class="fas fa-user"></i>{% cycle 'James Writer' 'Sarah Grain' 'Chef Marcus' 'Diana Lee' 'Dr. Patel' 'Chef Alice' %}</span>
+              <span><i class="fas fa-comment"></i>{% cycle '24' '18' '32' '15' '28' '11' %} Comments</span>
+            </div>
+            <a href="{% url 'blog_list' %}" class="blmore">Read More <i class="fas fa-arrow-right"></i></a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

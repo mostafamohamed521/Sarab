@@ -1,0 +1,50 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}Edit Address - Sarab{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="container">
+    <span class="slbl">My Account</span>
+    <h1 class="stitle">Edit <span>Address</span></h1>
+  </div>
+</div>
+<section style="padding:55px 0;background:var(--cream);">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-7 col-lg-6">
+        <div class="box-card">
+          <div class="box-card-title"><i class="fas fa-map-marker-alt"></i>Edit Address</div>
+          <form method="POST">{% csrf_token %}
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="flbl">Address Type</label>
+                <select name="label" class="fctrl">
+                  <option value="home" {% if address.label == 'home' %}selected{% endif %}>🏠 Home</option>
+                  <option value="work" {% if address.label == 'work' %}selected{% endif %}>💼 Work</option>
+                  <option value="other" {% if address.label == 'other' %}selected{% endif %}>📍 Other</option>
+                </select>
+              </div>
+              <div class="col-sm-6"><label class="flbl">Full Name</label><input type="text" name="full_name" class="fctrl" value="{{ address.full_name }}" required/></div>
+              <div class="col-sm-6"><label class="flbl">Phone</label><input type="tel" name="phone" class="fctrl" value="{{ address.phone }}" required/></div>
+              <div class="col-12"><label class="flbl">Street Address</label><input type="text" name="street_address" class="fctrl" value="{{ address.street_address }}" required/></div>
+              <div class="col-sm-4"><label class="flbl">City</label><input type="text" name="city" class="fctrl" value="{{ address.city }}" required/></div>
+              <div class="col-sm-4"><label class="flbl">State</label><input type="text" name="state" class="fctrl" value="{{ address.state }}" required/></div>
+              <div class="col-sm-4"><label class="flbl">ZIP Code</label><input type="text" name="zip_code" class="fctrl" value="{{ address.zip_code }}" required/></div>
+              <div class="col-12">
+                <label style="display:flex;align-items:center;gap:8px;font-size:.83rem;cursor:pointer;color:#666;">
+                  <input type="checkbox" name="is_default" style="accent-color:var(--primary);" {% if address.is_default %}checked{% endif %}/>
+                  Set as my default address
+                </label>
+              </div>
+              <div class="col-12 d-flex gap-3">
+                <button type="submit" class="btn-red"><i class="fas fa-save"></i>Save Changes</button>
+                <a href="{% url 'addresses' %}" class="btn btn-outline-secondary" style="border-radius:50px;padding:14px 24px;font-size:.88rem;">Cancel</a>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

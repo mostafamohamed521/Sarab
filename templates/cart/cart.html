@@ -1,0 +1,146 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}Your Cart - Sarab{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="container">
+    <span class="slbl">Your Order</span>
+    <h1 class="stitle">Shopping <span>Cart</span></h1>
+  </div>
+</div>
+
+<section style="padding:50px 0;background:var(--cream);">
+  <div class="container">
+    {% if cart.is_empty %}
+    <div class="empty-box">
+      <i class="fas fa-shopping-cart empty-box-icon"></i>
+      <h3>Your cart is empty</h3>
+      <p>Looks like you haven't added anything yet!</p>
+      <a href="{% url 'full_menu' %}" class="btn-red"><i class="fas fa-utensils"></i>Browse Menu</a>
+    </div>
+    {% else %}
+    <div class="row g-4 align-items-start">
+      <!-- Cart Items -->
+      <div class="col-lg-8">
+        <div style="background:#fff;border-radius:18px;box-shadow:0 4px 22px rgba(0,0,0,.07);overflow:hidden;margin-bottom:18px;">
+          <div style="padding:18px 22px 14px;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center;">
+            <h5 style="margin:0;font-family:'Playfair Display',serif;">Cart Items <span style="color:var(--primary);">({{ cart|length }})</span></h5>
+            <a href="{% url 'full_menu' %}" style="font-size:.83rem;color:var(--primary);font-weight:600;"><i class="fas fa-plus me-1"></i>Add More Items</a>
+          </div>
+          {% for item in cart %}
+          <div class="cart-row" id="page-cart-row-{{ item.item.id }}">
+            <img class="cart-row-img" src="{{ item.image }}" alt="{{ item.name }}" onerror="this.src='{% static 'img/menu/1.jpg' %}'"/>
+            <div style="flex:1;min-width:0;">
+              <div class="cart-row-name">{{ item.name }}</div>
+              <div class="cart-row-cat">{{ item.item.category.name }}</div>
+              <div class="cart-row-price">${{ item.price }}</div>
+            </div>
+            <div class="qty-ctrl">
+              <button class="qty-btn-sm page-minus" data-id="{{ item.item.id }}">−</button>
+              <span class="qty-num page-qty" id="pq-{{ item.item.id }}">{{ item.quantity }}</span>
+              <button class="qty-btn-sm page-plus"  data-id="{{ item.item.id }}">+</button>
+            </div>
+            <div class="cart-row-total" id="pt-{{ item.item.id }}">${{ item.total_price }}</div>
+            <button class="btn-remove page-rm" data-id="{{ item.item.id }}" data-price="{{ item.price }}"><i class="fas fa-trash-alt"></i></button>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Coupon -->
+        <div style="background:#fff;border-radius:18px;box-shadow:0 4px 22px rgba(0,0,0,.07);padding:22px 24px;">
+          <h6 style="font-family:'Playfair Display',serif;margin-bottom:14px;color:var(--dark);"><i class="fas fa-tag me-2" style="color:var(--secondary);"></i>Promo Code</h6>
+          <div style="display:flex;gap:10px;">
+            <input type="text" id="cpnInput" class="fctrl" placeholder="Enter promo code e.g. WELCOME15" style="flex:1;margin-bottom:0;text-transform:uppercase;"/>
+            <button id="cpnBtn" class="btn-red" style="padding:12px 22px;white-space:nowrap;"><i class="fas fa-check"></i>Apply</button>
+          </div>
+          <div id="cpnMsg" style="font-size:.83rem;margin-top:10px;display:none;padding:8px 12px;border-radius:8px;"></div>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="col-lg-4">
+        <div class="summary-box">
+          <div class="summary-title">Order Summary</div>
+          <div class="summary-row"><span>Subtotal</span><span id="sum-sub">${{ cart.get_subtotal }}</span></div>
+          <div class="summary-row"><span>Tax (8%)</span><span id="sum-tax">${{ cart.get_tax }}</span></div>
+          <div class="summary-row">
+            <span>Delivery</span>
+            <span id="sum-del">{% if cart.get_delivery_fee == 0 %}<span class="summary-free">FREE</span>{% else %}${{ cart.get_delivery_fee }}{% endif %}</span>
+          </div>
+          <div class="summary-row" id="sum-disc-row" style="display:none;color:#4ade80;">
+            <span>Discount</span><span id="sum-disc">-$0.00</span>
+          </div>
+          <div class="summary-row total"><span>Total</span><span id="sum-total">${{ cart.get_total }}</span></div>
+          {% if cart.get_subtotal < 30 %}
+          <div class="summary-note"><i class="fas fa-info-circle me-1" style="color:var(--secondary);"></i>Add ${% widthratio cart.get_delivery_fee 1 1 %} more for free delivery</div>
+          {% else %}
+          <div class="summary-note" style="color:#16a34a;background:#f0fff4;"><i class="fas fa-check-circle me-1"></i>You qualify for free delivery!</div>
+          {% endif %}
+          <a href="{% url 'checkout' %}" class="btn-red w-100 justify-content-center d-flex mt-3"><i class="fas fa-lock"></i>Checkout</a>
+          <a href="{% url 'full_menu' %}" class="btn btn-outline-secondary w-100 mt-2" style="border-radius:50px;padding:12px;font-size:.85rem;text-align:center;display:block;">Continue Shopping</a>
+          <div class="summary-secure"><i class="fas fa-shield-alt"></i>Secured with 256-bit SSL encryption</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('click', function(e) {
+  // PLUS
+  if (e.target.closest('.page-plus')) {
+    const id = e.target.closest('.page-plus').dataset.id;
+    const qEl = document.getElementById('pq-'+id);
+    const nq = parseInt(qEl.textContent) + 1;
+    apiPost(URL_CART_UPDATE+id+'/', {quantity:nq}).then(d=>{
+      qEl.textContent = nq;
+      updateBadge(d.cart_count);
+      const pEl = document.getElementById('pt-'+id);
+      if (pEl) {
+        const price = parseFloat(d.subtotal || 0);
+        // reload for accurate totals
+        location.reload();
+      }
+    });
+  }
+  // MINUS
+  if (e.target.closest('.page-minus')) {
+    const id = e.target.closest('.page-minus').dataset.id;
+    const qEl = document.getElementById('pq-'+id);
+    const nq = parseInt(qEl.textContent) - 1;
+    if (nq <= 0) {
+      apiPost(URL_CART_REMOVE+id+'/', {}).then(d=>{ updateBadge(d.cart_count); location.reload(); });
+    } else {
+      apiPost(URL_CART_UPDATE+id+'/', {quantity:nq}).then(d=>{ qEl.textContent=nq; updateBadge(d.cart_count); location.reload(); });
+    }
+  }
+  // REMOVE
+  if (e.target.closest('.page-rm')) {
+    const id = e.target.closest('.page-rm').dataset.id;
+    apiPost(URL_CART_REMOVE+id+'/', {}).then(d=>{ updateBadge(d.cart_count); toast('Item removed'); location.reload(); });
+  }
+});
+
+// Coupon
+document.getElementById('cpnBtn')?.addEventListener('click', function() {
+  const code = document.getElementById('cpnInput').value.trim().toUpperCase();
+  if (!code) return;
+  const msg = document.getElementById('cpnMsg');
+  fetch('{% url "apply_coupon" %}', {method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},body:JSON.stringify({code})})
+  .then(r=>r.json()).then(d=>{
+    msg.style.display='block';
+    if (d.status==='ok') {
+      msg.style.background='rgba(74,222,128,.1)'; msg.style.color='#16a34a';
+      msg.innerHTML='<i class="fas fa-check-circle me-1"></i>'+d.message;
+      document.getElementById('sum-disc-row').style.display='flex';
+      document.getElementById('sum-disc').textContent='-$'+d.discount;
+    } else {
+      msg.style.background='rgba(232,40,26,.08)'; msg.style.color='var(--primary)';
+      msg.innerHTML='<i class="fas fa-times-circle me-1"></i>'+d.message;
+    }
+  });
+});
+</script>
+{% endblock %}

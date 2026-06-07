@@ -1,0 +1,64 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}Card Payment - Sarab{% endblock %}
+{% block content %}
+<section style="padding:80px 0;background:var(--cream);">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-5">
+        <div class="box-card">
+          <div class="text-center mb-4">
+            <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#635bff,#7c5cfc);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;"><i class="fas fa-lock fa-lg" style="color:#fff;"></i></div>
+            <h3 style="font-family:'Playfair Display',serif;margin-bottom:4px;">Secure Payment</h3>
+            <p style="color:#aaa;font-size:.85rem;">Order #{{ order.order_number }}</p>
+          </div>
+          <div style="background:var(--cream);border-radius:12px;padding:18px;margin-bottom:24px;">
+            <div style="display:flex;justify-content:space-between;font-size:.87rem;color:#777;margin-bottom:7px;"><span>Subtotal</span><span>${{ order.subtotal }}</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:.87rem;color:#777;margin-bottom:7px;"><span>Tax</span><span>${{ order.tax }}</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:.87rem;color:#777;margin-bottom:12px;"><span>Delivery</span><span>${{ order.delivery_fee }}</span></div>
+            <div style="display:flex;justify-content:space-between;font-weight:700;font-size:1.05rem;border-top:1px solid #eee;padding-top:10px;"><span>Total</span><span style="color:var(--primary);">${{ order.total }}</span></div>
+          </div>
+          <div id="card-element" style="padding:16px;border:1.5px solid #eee;border-radius:12px;margin-bottom:10px;background:#fafafa;"></div>
+          <div id="card-errors" style="color:var(--primary);font-size:.82rem;min-height:20px;margin-bottom:14px;"></div>
+          <button id="payBtn" class="btn-red w-100 justify-content-center d-flex" style="font-size:1rem;padding:16px;"><i class="fas fa-lock"></i>Pay ${{ order.total }} Securely</button>
+          <div style="display:flex;justify-content:center;gap:10px;margin-top:16px;opacity:.55;">
+            <i class="fab fa-cc-visa fa-xl" style="color:#1a1f71;"></i>
+            <i class="fab fa-cc-mastercard fa-xl" style="color:#eb001b;"></i>
+            <i class="fab fa-cc-amex fa-xl" style="color:#007bc1;"></i>
+            <i class="fas fa-shield-alt fa-lg" style="color:#4ade80;"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+const stripe = Stripe('{{ stripe_key }}');
+const elements = stripe.elements();
+const card = elements.create('card', {style:{base:{fontSize:'15px',color:'#333',fontFamily:'Poppins,sans-serif','::placeholder':{color:'#bbb'}}}});
+card.mount('#card-element');
+card.addEventListener('change', e=>{
+  document.getElementById('card-errors').textContent = e.error ? e.error.message : '';
+});
+document.getElementById('payBtn').addEventListener('click', async function() {
+  const btn = this;
+  btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Processing...';
+  const r = await fetch('{% url "create_payment_intent" %}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},body:JSON.stringify({order_id:{{ order.id }}})});
+  const data = await r.json();
+  if (data.error) {
+    document.getElementById('card-errors').textContent = data.error;
+    btn.disabled=false; btn.innerHTML='<i class="fas fa-lock"></i>Pay ${{ order.total }} Securely'; return;
+  }
+  const result = await stripe.confirmCardPayment(data.client_secret, {payment_method:{card}});
+  if (result.error) {
+    document.getElementById('card-errors').textContent = result.error.message;
+    btn.disabled=false; btn.innerHTML='<i class="fas fa-lock"></i>Pay ${{ order.total }} Securely';
+  } else {
+    window.location.href = '{% url "payment_success" order.order_number %}';
+  }
+});
+</script>
+{% endblock %}

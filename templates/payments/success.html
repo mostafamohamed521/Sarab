@@ -1,0 +1,27 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}Payment Successful - Sarab{% endblock %}
+{% block content %}
+<div class="result-wrap">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-5">
+        <div class="result-card">
+          <div class="result-icon success"><i class="fas fa-check fa-2x" style="color:#fff;"></i></div>
+          <h2>Payment Successful!</h2>
+          <p>Your payment of <strong style="color:var(--primary);">${{ order.total }}</strong> was processed successfully.</p>
+          <div class="result-detail-box">
+            <div class="result-detail-row"><span class="lbl">Order Number</span><span class="val highlight">{{ order.order_number }}</span></div>
+            <div class="result-detail-row"><span class="lbl">Payment Method</span><span class="val">{{ order.get_payment_method_display }}</span></div>
+            <div class="result-detail-row"><span class="lbl">Status</span><span class="val"><span class="status-badge paid">Paid</span></span></div>
+          </div>
+          <div class="result-actions">
+            <a href="{% url 'order_tracking' order.order_number %}" class="btn-red"><i class="fas fa-map-marker-alt"></i>Track Order</a>
+            <a href="{% url 'invoice' order.order_number %}" class="btn btn-outline-secondary" style="border-radius:50px;padding:13px 22px;font-size:.88rem;"><i class="fas fa-file-invoice me-2"></i>Invoice</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

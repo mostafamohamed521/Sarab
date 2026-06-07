@@ -1,0 +1,117 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}Contact Us - Sarab{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="container">
+    <span class="slbl">Get In Touch</span>
+    <h1 class="stitle">Contact <span>Us</span></h1>
+    <div class="sline" style="margin:12px auto;"></div>
+    <p class="sdesc">We'd love to hear from you. Our team typically responds within 2 hours.</p>
+  </div>
+</div>
+
+<section style="padding:70px 0;background:var(--cream);">
+  <div class="container">
+    <!-- Info Cards -->
+    <div class="row g-4 mb-5">
+      <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="0">
+        <div class="fcard" style="border-radius:16px;padding:28px;text-align:center;transition:.3s;" onmouseenter="this.style.transform='translateY(-5px)'" onmouseleave="this.style.transform=''">
+          <div style="width:54px;height:54px;border-radius:14px;background:rgba(232,40,26,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;"><i class="fas fa-map-marker-alt fa-lg" style="color:var(--primary);"></i></div>
+          <h6 style="font-family:'Playfair Display',serif;margin-bottom:8px;">Visit Us</h6>
+          <p style="color:#888;font-size:.84rem;margin:0;line-height:1.6;">42 Flavor Street<br/>Manhattan, NY 10001</p>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="60">
+        <div class="fcard" style="border-radius:16px;padding:28px;text-align:center;transition:.3s;" onmouseenter="this.style.transform='translateY(-5px)'" onmouseleave="this.style.transform=''">
+          <div style="width:54px;height:54px;border-radius:14px;background:rgba(255,186,8,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;"><i class="fas fa-phone-alt fa-lg" style="color:var(--secondary);"></i></div>
+          <h6 style="font-family:'Playfair Display',serif;margin-bottom:8px;">Call Us</h6>
+          <p style="color:#888;font-size:.84rem;margin:0;"><a href="tel:+18001234567" style="color:#888;">+1 (800) 123-4567</a></p>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="120">
+        <div class="fcard" style="border-radius:16px;padding:28px;text-align:center;transition:.3s;" onmouseenter="this.style.transform='translateY(-5px)'" onmouseleave="this.style.transform=''">
+          <div style="width:54px;height:54px;border-radius:14px;background:rgba(74,222,128,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;"><i class="fas fa-envelope fa-lg" style="color:#4ade80;"></i></div>
+          <h6 style="font-family:'Playfair Display',serif;margin-bottom:8px;">Email Us</h6>
+          <p style="color:#888;font-size:.84rem;margin:0;"><a href="mailto:hello@sarabfood.com" style="color:#888;">hello@sarabfood.com</a></p>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="180">
+        <div class="fcard" style="border-radius:16px;padding:28px;text-align:center;transition:.3s;" onmouseenter="this.style.transform='translateY(-5px)'" onmouseleave="this.style.transform=''">
+          <div style="width:54px;height:54px;border-radius:14px;background:rgba(99,91,255,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;"><i class="fas fa-clock fa-lg" style="color:#635bff;"></i></div>
+          <h6 style="font-family:'Playfair Display',serif;margin-bottom:8px;">Open Hours</h6>
+          <p style="color:#888;font-size:.84rem;margin:0;line-height:1.6;">Wed–Sun: 9 AM – 11 PM<br/><span style="color:var(--primary);">Mon–Tue: Closed</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form + Map -->
+    <div class="row g-4 align-items-start">
+      <div class="col-lg-6" data-aos="fade-right">
+        <div class="box-card">
+          <div class="box-card-title"><i class="fas fa-paper-plane"></i>Send Us a Message</div>
+          <div class="row g-3">
+            <div class="col-sm-6"><label class="flbl">Your Name *</label><input type="text" class="fctrl" id="cName" placeholder="John Doe"/></div>
+            <div class="col-sm-6"><label class="flbl">Email *</label><input type="email" class="fctrl" id="cEmail" placeholder="you@email.com"/></div>
+            <div class="col-sm-6"><label class="flbl">Phone</label><input type="tel" class="fctrl" id="cPhone" placeholder="+1 (800) 000-0000"/></div>
+            <div class="col-sm-6"><label class="flbl">Subject</label>
+              <select class="fctrl" id="cSubject">
+                <option>General Inquiry</option>
+                <option>Catering &amp; Events</option>
+                <option>Feedback</option>
+                <option>Partnership</option>
+                <option>Media &amp; Press</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="col-12"><label class="flbl">Message *</label><textarea class="fctrl" rows="5" id="cMsg" placeholder="Write your message here..."></textarea></div>
+            <div class="col-12">
+              <button id="cSendBtn" class="btn-red"><i class="fas fa-paper-plane"></i>Send Message</button>
+            </div>
+          </div>
+          <div id="cOk" style="display:none;background:rgba(74,222,128,.1);border:1.5px solid #4ade80;border-radius:12px;padding:16px 20px;margin-top:18px;display:none;align-items:center;gap:12px;">
+            <i class="fas fa-check-circle fa-lg" style="color:#4ade80;"></i>
+            <div>
+              <div style="font-weight:700;font-size:.9rem;color:var(--dark);">Message Sent!</div>
+              <div style="font-size:.83rem;color:#666;">We'll get back to you within 2 hours.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6" data-aos="fade-left">
+        <div style="border-radius:18px;overflow:hidden;height:380px;box-shadow:0 8px 30px rgba(0,0,0,.1);">
+          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.9476519598603!2d-73.98823908459404!3d40.74844047932756!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c259a9b30eac9f%3A0xaca05ca48ab9d3d6!2sMidtown%20Manhattan%2C%20New%20York%2C%20NY!5e0!3m2!1sen!2sus!4v1234567890"
+            width="100%" height="380" style="border:0;display:block;" allowfullscreen="" loading="lazy"></iframe>
+        </div>
+        <div style="background:var(--dark);border-radius:14px;padding:18px 22px;margin-top:14px;display:flex;align-items:center;gap:14px;">
+          <i class="fas fa-location-dot fa-lg" style="color:var(--primary);flex-shrink:0;"></i>
+          <div>
+            <div style="color:#fff;font-weight:600;font-size:.9rem;">42 Flavor Street, Manhattan</div>
+            <div style="color:rgba(255,255,255,.5);font-size:.8rem;">New York, NY 10001 — Near Times Square</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.getElementById('cSendBtn').addEventListener('click', function() {
+  const name=document.getElementById('cName').value.trim();
+  const email=document.getElementById('cEmail').value.trim();
+  const msg=document.getElementById('cMsg').value.trim();
+  if (!name||!email||!msg) { toast('Please fill all required fields.','error'); return; }
+  const btn=this;
+  btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Sending...'; btn.disabled=true;
+  fetch('{% url "contact_submit" %}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
+    body:JSON.stringify({name,email,phone:document.getElementById('cPhone').value,subject:document.getElementById('cSubject').value,message:msg})
+  }).then(r=>r.json()).then(d=>{
+    btn.innerHTML='<i class="fas fa-paper-plane"></i>Send Message'; btn.disabled=false;
+    const ok=document.getElementById('cOk');
+    ok.style.display='flex'; ok.scrollIntoView({behavior:'smooth',block:'nearest'});
+    toast(d.message||'Message sent!');
+  }).catch(()=>{ btn.innerHTML='<i class="fas fa-paper-plane"></i>Send Message'; btn.disabled=false; });
+});
+</script>
+{% endblock %}

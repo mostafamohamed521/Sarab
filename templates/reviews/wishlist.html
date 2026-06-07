@@ -1,0 +1,49 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}My Wishlist - Sarab{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="container">
+    <span class="slbl">Saved Items</span>
+    <h1 class="stitle">My <span>Wishlist</span></h1>
+  </div>
+</div>
+<section style="padding:50px 0;background:var(--cream);">
+  <div class="container">
+    {% if wishlist.items.exists %}
+    <div class="row g-4">
+      {% for item in wishlist.items.all %}
+      <div class="col-sm-6 col-lg-4" data-aos="fade-up">
+        <div class="mcard">
+          <div class="mimg">
+            <img src="{{ item.get_image_url }}" alt="{{ item.name }}" onerror="this.src='{% static 'img/menu/1.jpg' %}'"/>
+            {% if item.badge %}<div class="mbdg {% if item.badge == 'new' %}new{% elif item.badge == 'hot' %}hot{% endif %}"><i class="fas fa-star"></i> {{ item.get_badge_display }}</div>{% endif %}
+            <div class="mhrt wishlist-btn active" data-id="{{ item.id }}" style="cursor:pointer;"><i class="fas fa-heart" style="color:var(--primary);"></i></div>
+          </div>
+          <div class="mbody">
+            <div class="mcat">{{ item.category.name }}</div>
+            <div class="mtit">{{ item.name }}</div>
+            <div class="mdesc">{{ item.short_description }}</div>
+            <div class="mfoot">
+              <div>
+                <div class="mprice">${{ item.price }}{% if item.old_price %} <small>${{ item.old_price }}</small>{% endif %}</div>
+                <div class="mstars"><i class="fas fa-star"></i> {{ item.average_rating }} <span style="color:#bbb;font-size:.7rem;">({{ item.review_count }})</span></div>
+              </div>
+              <button class="madd add-to-cart-btn" data-id="{{ item.id }}" data-name="{{ item.name }}" title="Add to Cart"><i class="fas fa-plus"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-box">
+      <i class="fas fa-heart empty-box-icon"></i>
+      <h3>Your wishlist is empty</h3>
+      <p>Tap the heart icon on any dish to save it here for later.</p>
+      <a href="{% url 'full_menu' %}" class="btn-red"><i class="fas fa-utensils"></i>Browse Menu</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

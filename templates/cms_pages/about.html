@@ -1,0 +1,140 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}About Us - Sarab Restaurant{% endblock %}
+{% block content %}
+
+<!-- Hero -->
+<div class="page-banner">
+  <div class="container">
+    <span class="slbl">Who We Are</span>
+    <h1 class="stitle">About <span>Sarab</span></h1>
+    <div class="sline" style="margin:12px auto;"></div>
+    <p class="sdesc">From a humble corner diner to one of New York's most beloved food destinations.</p>
+  </div>
+</div>
+
+<!-- Story -->
+<section style="padding:80px 0;">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-5" data-aos="fade-right">
+        <div class="astack">
+          <div class="aexp"><span class="anum">12+</span><small>Years of<br/>Excellence</small></div>
+          <div class="amain"><img src="{% static 'img/about1.jpg' %}" alt="Restaurant"/></div>
+          <div class="asm"><img src="{% static 'img/about2.jpg' %}" alt=""/></div>
+        </div>
+      </div>
+      <div class="col-lg-7" data-aos="fade-left">
+        <span class="slbl">Our Story</span>
+        <h2 class="stitle text-start">A Passion for <span>Great Food</span></h2>
+        <div class="sline lft"></div>
+        <p style="color:#666;line-height:1.85;margin-bottom:16px;">Founded in 2012 by Chef Marcus and his wife Diana, Sarab started as a 20-seat diner with one simple mission: serve honest, delicious food made from the freshest ingredients. No shortcuts. No compromises.</p>
+        <p style="color:#666;line-height:1.85;margin-bottom:28px;">Twelve years later, we operate across 8 cities, serve thousands of meals every week, and still hold those same values dear. Every burger is hand-pattied, every sauce is made in-house, and every customer is treated like family.</p>
+        <div class="row g-3 mb-4">
+          <div class="col-4 text-center">
+            <div style="background:var(--cream);border-radius:14px;padding:18px 10px;">
+              <div style="font-size:1.7rem;font-weight:800;color:var(--primary);">850K+</div>
+              <div style="font-size:.78rem;color:#888;margin-top:3px;">Happy Customers</div>
+            </div>
+          </div>
+          <div class="col-4 text-center">
+            <div style="background:var(--cream);border-radius:14px;padding:18px 10px;">
+              <div style="font-size:1.7rem;font-weight:800;color:var(--primary);">15</div>
+              <div style="font-size:.78rem;color:#888;margin-top:3px;">Expert Chefs</div>
+            </div>
+          </div>
+          <div class="col-4 text-center">
+            <div style="background:var(--cream);border-radius:14px;padding:18px 10px;">
+              <div style="font-size:1.7rem;font-weight:800;color:var(--primary);">18+</div>
+              <div style="font-size:.78rem;color:#888;margin-top:3px;">Awards Won</div>
+            </div>
+          </div>
+        </div>
+        <a href="{% url 'full_menu' %}" class="btn-red"><i class="fas fa-utensils"></i>Explore Our Menu</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Values -->
+<section style="padding:70px 0;background:var(--cream);">
+  <div class="container">
+    <div class="text-center mb-5" data-aos="fade-up">
+      <span class="slbl">Why Choose Us</span>
+      <h2 class="stitle">Our Core <span>Values</span></h2>
+      <div class="sline"></div>
+    </div>
+    <div class="row g-4">
+      <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="0">
+        <div class="fcard" style="border-radius:16px;padding:30px;text-align:center;height:100%;transition:.4s;" onmouseenter="this.style.transform='translateY(-8px)'" onmouseleave="this.style.transform=''">
+          <div style="width:64px;height:64px;border-radius:16px;background:rgba(232,40,26,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;"><i class="fas fa-leaf fa-2x" style="color:var(--primary);"></i></div>
+          <h5 style="font-family:'Playfair Display',serif;margin-bottom:10px;">100% Fresh</h5>
+          <p style="color:#888;font-size:.87rem;line-height:1.7;margin:0;">Every ingredient sourced fresh daily from local farms and trusted suppliers.</p>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="80">
+        <div class="fcard" style="border-radius:16px;padding:30px;text-align:center;height:100%;transition:.4s;" onmouseenter="this.style.transform='translateY(-8px)'" onmouseleave="this.style.transform=''">
+          <div style="width:64px;height:64px;border-radius:16px;background:rgba(255,186,8,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;"><i class="fas fa-award fa-2x" style="color:var(--secondary);"></i></div>
+          <h5 style="font-family:'Playfair Display',serif;margin-bottom:10px;">Award-Winning</h5>
+          <p style="color:#888;font-size:.87rem;line-height:1.7;margin:0;">18+ national culinary awards recognising excellence in taste, quality and service.</p>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="160">
+        <div class="fcard" style="border-radius:16px;padding:30px;text-align:center;height:100%;transition:.4s;" onmouseenter="this.style.transform='translateY(-8px)'" onmouseleave="this.style.transform=''">
+          <div style="width:64px;height:64px;border-radius:16px;background:rgba(74,222,128,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;"><i class="fas fa-truck-fast fa-2x" style="color:#4ade80;"></i></div>
+          <h5 style="font-family:'Playfair Display',serif;margin-bottom:10px;">Fast Delivery</h5>
+          <p style="color:#888;font-size:.87rem;line-height:1.7;margin:0;">Hot food at your door in 25 minutes or less, every single time, guaranteed.</p>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="240">
+        <div class="fcard" style="border-radius:16px;padding:30px;text-align:center;height:100%;transition:.4s;" onmouseenter="this.style.transform='translateY(-8px)'" onmouseleave="this.style.transform=''">
+          <div style="width:64px;height:64px;border-radius:16px;background:rgba(99,91,255,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;"><i class="fas fa-heart fa-2x" style="color:#635bff;"></i></div>
+          <h5 style="font-family:'Playfair Display',serif;margin-bottom:10px;">Made with Love</h5>
+          <p style="color:#888;font-size:.87rem;line-height:1.7;margin:0;">Every dish prepared with genuine passion and care. Food is our love language.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Chefs -->
+<section id="chefs" style="padding:70px 0;">
+  <div class="container">
+    <div class="text-center mb-5" data-aos="fade-up">
+      <span class="slbl">The Team</span>
+      <h2 class="stitle">Meet Our Expert <span>Chefs</span></h2>
+      <div class="sline"></div>
+    </div>
+    <div class="row g-4">
+      {% for c in "1234" %}
+      <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="{{ forloop.counter0 }}0">
+        <div class="chcard">
+          <div class="chimg">
+            <img src="{% static 'img/chefs/' %}{{ c }}.jpg" alt="Chef" onerror="this.src='{% static 'img/about1.jpg' %}'"/>
+            <div class="chsoc"><a href="#"><i class="fab fa-instagram"></i></a><a href="#"><i class="fab fa-facebook-f"></i></a></div>
+          </div>
+          <div class="chbody">
+            {% if c == "1" %}<div class="chnm">Alice Mortal</div><div class="chrole">Head Chef</div>
+            {% elif c == "2" %}<div class="chnm">Michael Corn</div><div class="chrole">Grill Master</div>
+            {% elif c == "3" %}<div class="chnm">Faz Chowdel</div><div class="chrole">Pastry Chef</div>
+            {% else %}<div class="chnm">William Latnum</div><div class="chrole">Pizza Artisan</div>{% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="background:linear-gradient(135deg,var(--primary) 0%,#c0392b 100%);padding:70px 0;text-align:center;">
+  <div class="container">
+    <h2 style="color:#fff;font-family:'Playfair Display',serif;font-size:2rem;margin-bottom:12px;">Ready to Experience the Sarab Difference?</h2>
+    <p style="color:rgba(255,255,255,.8);margin-bottom:28px;font-size:.95rem;">Order online for delivery, or book a table for the full dining experience.</p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+      <a href="{% url 'full_menu' %}" style="background:#fff;color:var(--primary);padding:15px 30px;border-radius:50px;font-weight:700;text-decoration:none;font-size:.92rem;display:inline-flex;align-items:center;gap:8px;transition:.3s;"><i class="fas fa-utensils"></i>Order Now</a>
+      <a href="{% url 'make_reservation' %}" style="background:rgba(255,255,255,.15);color:#fff;padding:15px 30px;border-radius:50px;font-weight:700;text-decoration:none;font-size:.92rem;display:inline-flex;align-items:center;gap:8px;border:2px solid rgba(255,255,255,.35);transition:.3s;"><i class="fas fa-calendar-check"></i>Book a Table</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

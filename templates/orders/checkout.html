@@ -1,0 +1,181 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}Checkout - Sarab{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="container">
+    <span class="slbl">Almost There</span>
+    <h1 class="stitle">Secure <span>Checkout</span></h1>
+    <div class="checkout-steps">
+      <span class="checkout-step-num active">1</span>
+      <span class="checkout-step-label">Delivery Info</span>
+      <span class="checkout-step-sep">›</span>
+      <span class="checkout-step-num inactive">2</span>
+      <span class="checkout-step-label">Payment</span>
+      <span class="checkout-step-sep">›</span>
+      <span class="checkout-step-num inactive">3</span>
+      <span class="checkout-step-label">Confirmation</span>
+    </div>
+  </div>
+</div>
+
+<section style="padding:50px 0;background:var(--cream);">
+  <div class="container">
+    <form id="checkoutForm" method="POST" action="{% url 'place_order' %}">{% csrf_token %}
+      <div class="row g-4 align-items-start">
+        <!-- Left: Delivery + Payment -->
+        <div class="col-lg-7">
+
+          <!-- Delivery -->
+          <div class="box-card">
+            <div class="box-card-title"><i class="fas fa-map-marker-alt"></i>Delivery Address</div>
+
+            {% if addresses %}
+            <div class="mb-4">
+              <p style="font-size:.85rem;color:#888;margin-bottom:12px;"><i class="fas fa-bookmark me-1" style="color:var(--secondary);"></i>Select a saved address or enter a new one:</p>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                {% for addr in addresses %}
+                <label style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border:1.5px solid #eee;border-radius:12px;cursor:pointer;transition:.25s;" class="addr-select-label">
+                  <input type="radio" name="saved_address" value="{{ addr.id }}" style="margin-top:3px;accent-color:var(--primary);" {% if addr.is_default %}checked{% endif %}/>
+                  <div style="font-size:.87rem;">
+                    <strong style="color:var(--dark);">{{ addr.get_label_display }}</strong>
+                    {% if addr.is_default %}<span class="ttag" style="font-size:.68rem;margin-left:6px;padding:2px 8px;">Default</span>{% endif %}
+                    <br/><span style="color:#777;">{{ addr.street_address }}, {{ addr.city }}, {{ addr.state }} {{ addr.zip_code }}</span>
+                  </div>
+                </label>
+                {% endfor %}
+                <label style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px dashed #ddd;border-radius:12px;cursor:pointer;color:#888;font-size:.87rem;" class="addr-select-label">
+                  <input type="radio" name="saved_address" value="new" style="accent-color:var(--primary);"/>
+                  <span><i class="fas fa-plus me-2" style="color:var(--primary);"></i>Use a new address</span>
+                </label>
+              </div>
+            </div>
+            <div id="newAddrFields" style="display:none;">
+            {% endif %}
+
+            <div class="row g-3" {% if not addresses %}id="newAddrFields"{% endif %}>
+              <div class="col-sm-6"><label class="flbl">Full Name *</label><input type="text" name="full_name" class="fctrl" placeholder="John Doe" value="{{ user.get_full_name }}" {% if not addresses %}required{% endif %}/></div>
+              <div class="col-sm-6"><label class="flbl">Email *</label><input type="email" name="email" class="fctrl" placeholder="you@email.com" value="{{ user.email }}" {% if not addresses %}required{% endif %}/></div>
+              <div class="col-sm-6"><label class="flbl">Phone *</label><input type="tel" name="phone" class="fctrl" placeholder="+1 800-000-0000" value="{{ user.phone }}" {% if not addresses %}required{% endif %}/></div>
+              <div class="col-sm-6"><label class="flbl">Street Address *</label><input type="text" name="street_address" class="fctrl" placeholder="123 Main St" {% if not addresses %}required{% endif %}/></div>
+              <div class="col-sm-4"><label class="flbl">City *</label><input type="text" name="city" class="fctrl" placeholder="New York" {% if not addresses %}required{% endif %}/></div>
+              <div class="col-sm-4"><label class="flbl">State *</label><input type="text" name="state" class="fctrl" placeholder="NY" {% if not addresses %}required{% endif %}/></div>
+              <div class="col-sm-4"><label class="flbl">ZIP *</label><input type="text" name="zip_code" class="fctrl" placeholder="10001" {% if not addresses %}required{% endif %}/></div>
+              <input type="hidden" name="country" value="United States"/>
+            </div>
+            {% if addresses %}</div>{% endif %}
+          </div>
+
+          <!-- Payment Method -->
+          <div class="box-card">
+            <div class="box-card-title"><i class="fas fa-credit-card"></i>Payment Method</div>
+            <div>
+              <label class="payment-option selected">
+                <input type="radio" name="payment_method" value="cash" checked/>
+                <i class="fas fa-money-bill-wave fa-lg" style="color:#4ade80;width:26px;"></i>
+                <div class="payment-option-info"><strong>Cash on Delivery</strong><small>Pay when your order arrives</small></div>
+              </label>
+              <label class="payment-option">
+                <input type="radio" name="payment_method" value="stripe"/>
+                <i class="fas fa-credit-card fa-lg" style="color:#635bff;width:26px;"></i>
+                <div class="payment-option-info"><strong>Credit / Debit Card</strong><small>Secured via Stripe — Visa, Mastercard, Amex</small></div>
+                <div class="payment-icons-row"><i class="fab fa-cc-visa fa-lg" style="color:#1a1f71;"></i><i class="fab fa-cc-mastercard fa-lg" style="color:#eb001b;"></i></div>
+              </label>
+              <label class="payment-option">
+                <input type="radio" name="payment_method" value="paypal"/>
+                <i class="fab fa-paypal fa-lg" style="color:#003087;width:26px;"></i>
+                <div class="payment-option-info"><strong>PayPal</strong><small>Pay with your PayPal account</small></div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Notes + Coupon -->
+          <div class="box-card">
+            <div class="box-card-title"><i class="fas fa-sticky-note"></i>Order Notes & Promo Code</div>
+            <div class="mb-3"><label class="flbl">Special Instructions <span style="color:#bbb;font-weight:400;">(optional)</span></label><textarea name="notes" class="fctrl" rows="3" placeholder="Allergies, gate code, special requests..."></textarea></div>
+            <label class="flbl">Promo Code</label>
+            <div style="display:flex;gap:10px;">
+              <input type="text" id="cpnCode" name="coupon_code" class="fctrl" placeholder="e.g. WELCOME15" style="flex:1;margin-bottom:0;text-transform:uppercase;"/>
+              <button type="button" id="cpnApply" class="btn-red" style="padding:12px 18px;white-space:nowrap;font-size:.83rem;"><i class="fas fa-tag"></i>Apply</button>
+            </div>
+            <div id="cpnResult" style="font-size:.83rem;margin-top:8px;display:none;padding:8px 12px;border-radius:8px;"></div>
+          </div>
+        </div>
+
+        <!-- Right: Summary -->
+        <div class="col-lg-5">
+          <div class="summary-box">
+            <div class="summary-title">Order Summary</div>
+            {% for item in cart %}
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f8f8f8;font-size:.86rem;">
+              <span style="color:#555;">{{ item.name }} <span style="color:#bbb;">×{{ item.quantity }}</span></span>
+              <span style="font-weight:600;">${{ item.total_price }}</span>
+            </div>
+            {% endfor %}
+            <div style="margin-top:14px;">
+              <div class="summary-row"><span>Subtotal</span><span>${{ cart.get_subtotal }}</span></div>
+              <div class="summary-row"><span>Tax (8%)</span><span>${{ cart.get_tax }}</span></div>
+              <div class="summary-row"><span>Delivery</span><span>{% if cart.get_delivery_fee == 0 %}<span class="summary-free">FREE</span>{% else %}${{ cart.get_delivery_fee }}{% endif %}</span></div>
+              <div class="summary-row" id="co-disc-row" style="display:none;color:#4ade80;"><span>Discount</span><span id="co-disc">-$0.00</span></div>
+              <div class="summary-row total"><span>Total</span><span id="co-total">${{ cart.get_total }}</span></div>
+            </div>
+            <div class="summary-secure"><i class="fas fa-shield-alt"></i>Secured with 256-bit SSL</div>
+            <button type="submit" id="placeBtn" class="btn-red w-100 justify-content-center d-flex mt-4" style="font-size:1rem;padding:16px;">
+              <i class="fas fa-check-circle"></i>Place Order
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script>
+// Saved address toggle
+document.querySelectorAll('input[name="saved_address"]').forEach(r=>{
+  r.addEventListener('change', function(){
+    const nf = document.getElementById('newAddrFields');
+    if (nf) nf.style.display = this.value==='new' ? 'block' : 'none';
+    document.querySelectorAll('.addr-select-label').forEach(l=>l.style.borderColor='#eee');
+    if (this.closest('.addr-select-label')) this.closest('.addr-select-label').style.borderColor='var(--primary)';
+  });
+});
+// Highlight checked on load
+document.querySelectorAll('input[name="saved_address"]:checked').forEach(r=>{
+  if (r.closest('.addr-select-label')) r.closest('.addr-select-label').style.borderColor='var(--primary)';
+});
+// Payment option highlight
+document.querySelectorAll('.payment-option').forEach(opt=>{
+  opt.addEventListener('click', function(){
+    document.querySelectorAll('.payment-option').forEach(o=>o.classList.remove('selected'));
+    this.classList.add('selected');
+  });
+});
+// Apply coupon
+document.getElementById('cpnApply').addEventListener('click', function(){
+  const code = document.getElementById('cpnCode').value.trim().toUpperCase();
+  if (!code) return;
+  const res = document.getElementById('cpnResult');
+  fetch('{% url "apply_coupon" %}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},body:JSON.stringify({code})})
+  .then(r=>r.json()).then(d=>{
+    res.style.display='block';
+    if (d.status==='ok'){
+      res.style.background='rgba(74,222,128,.1)'; res.style.color='#16a34a';
+      res.innerHTML='<i class="fas fa-check-circle me-1"></i>'+d.message;
+      document.getElementById('co-disc-row').style.display='flex';
+      document.getElementById('co-disc').textContent='-$'+d.discount;
+    } else {
+      res.style.background='rgba(232,40,26,.08)'; res.style.color='var(--primary)';
+      res.innerHTML='<i class="fas fa-times-circle me-1"></i>'+d.message;
+    }
+  });
+});
+// Submit spinner
+document.getElementById('checkoutForm').addEventListener('submit', function(){
+  const btn=document.getElementById('placeBtn');
+  btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Processing...';
+  btn.disabled=true;
+});
+</script>
+{% endblock %}

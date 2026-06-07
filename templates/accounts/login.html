@@ -1,0 +1,48 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}Login - Sarab{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-5 col-lg-4">
+        <div class="auth-card">
+          <div class="text-center mb-4">
+            <div class="auth-logo"><i class="fas fa-utensils"></i></div>
+            <h2 style="font-family:'Playfair Display',serif;font-size:1.7rem;">Welcome <span style="color:var(--primary);">Back</span></h2>
+            <p style="color:#aaa;font-size:.85rem;margin-top:4px;">Sign in to your Sarab account</p>
+          </div>
+          <form method="POST" action="{% url 'login' %}">{% csrf_token %}
+            <div class="mb-3">
+              <label class="flbl">Email Address</label>
+              <input type="email" name="username" class="fctrl" placeholder="you@email.com" required autofocus/>
+            </div>
+            <div class="mb-3">
+              <label class="flbl">Password</label>
+              <div style="position:relative;">
+                <input type="password" name="password" id="pwdLogin" class="fctrl" placeholder="Your password" required style="padding-right:44px;"/>
+                <button type="button" onclick="togglePwd('pwdLogin','pi1')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#aaa;cursor:pointer;"><i class="fas fa-eye" id="pi1"></i></button>
+              </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-4" style="font-size:.83rem;">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:#666;"><input type="checkbox" name="remember_me" style="margin:0;accent-color:var(--primary);"/> Remember me</label>
+              <a href="{% url 'password_reset' %}" style="color:var(--primary);">Forgot Password?</a>
+            </div>
+            <button type="submit" class="btn-red w-100 justify-content-center" style="display:flex;"><i class="fas fa-sign-in-alt"></i>Sign In</button>
+          </form>
+          <p class="text-center mt-4" style="font-size:.86rem;color:#aaa;">Don't have an account? <a href="{% url 'register' %}" style="color:var(--primary);font-weight:600;">Create one free</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function togglePwd(fId, iId) {
+  const f=document.getElementById(fId), i=document.getElementById(iId);
+  f.type = f.type==='password' ? 'text' : 'password';
+  i.className = f.type==='password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+}
+</script>
+{% endblock %}

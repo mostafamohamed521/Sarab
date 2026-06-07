@@ -1,0 +1,542 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}Sarab - Fast Food & Restaurant{% endblock %}
+{% block nav_home %}active{% endblock %}
+{% block content %}
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hs hs1"></div><div class="hs hs2"></div>
+  <div class="hbgtxt">FOOD</div>
+  <div class="container">
+    <div class="row align-items-center g-5" style="min-height:88vh;">
+      <div class="col-lg-6">
+        <div class="hbadge"><div class="hbi"><i class="fas fa-star"></i></div><span>#1 Rated Fast Food Restaurant in New York</span></div>
+        <h1 class="htitle">Delicious <span class="hl">Fast Food</span><br/>for Every Moment</h1>
+        <p class="hdesc">Experience bold flavors crafted from premium ingredients. From crispy burgers to gourmet pizzas — every bite is an adventure worth savoring.</p>
+        <div class="d-flex flex-wrap gap-3 mb-2">
+          <a href="{% url 'full_menu' %}" class="btn-red"><i class="fas fa-utensils"></i>Explore Menu</a>
+          <a href="https://www.youtube.com/watch?v=RXv_uIN6e-Y" class="magnific_popup btn-play popup-youtube">
+            <div class="pico"><i class="fas fa-play"></i></div><span>Watch Our Story</span>
+          </a>
+        </div>
+        <div class="hstats d-flex gap-3 flex-wrap mt-4">
+          <div class="hstat"><span class="snum">850<em>+</em></span><small>Happy Customers</small></div>
+          <div class="sdiv"></div>
+          <div class="hstat"><span class="snum">120<em>+</em></span><small>Menu Items</small></div>
+          <div class="sdiv"></div>
+          <div class="hstat"><span class="snum">15<em>+</em></span><small>Expert Chefs</small></div>
+          <div class="sdiv"></div>
+          <div class="hstat"><span class="snum">12<em>yr</em></span><small>Experience</small></div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div style="position:relative;text-align:center;">
+          <div class="hcircle"><img src="{% static 'img/banner-img.jpg' %}" alt="Burger"/></div>
+          <div class="fcard fc1"><div class="fcoi r"><i class="fas fa-fire"></i></div><div><span class="fcnum">Hot Deal</span><span class="fcsm">30% off today</span></div></div>
+          <div class="fcard fc2"><div class="fcoi y"><i class="fas fa-star"></i></div><div><span class="fcnum">4.9/5</span><span class="fcsm">2k+ reviews</span></div></div>
+          <div class="fcard fc3"><div class="fcoi g"><i class="fas fa-clock"></i></div><div><span class="fcnum">20 min</span><span class="fcsm">Fast delivery</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="mqsec">
+  <div class="mqtrack">
+    <div class="mqitem"><i class="fas fa-circle"></i>Crispy Fried Chicken</div>
+    <div class="mqitem"><i class="fas fa-circle"></i>Gourmet Burgers</div>
+    <div class="mqitem"><i class="fas fa-circle"></i>Artisan Pizzas</div>
+    <div class="mqitem"><i class="fas fa-circle"></i>Fresh Wraps &amp; Rolls</div>
+    <div class="mqitem"><i class="fas fa-circle"></i>Loaded Fries</div>
+    <div class="mqitem"><i class="fas fa-circle"></i>Ice Cream Shakes</div>
+    <div class="mqitem"><i class="fas fa-circle"></i>Grilled Sandwiches</div>
+    <div class="mqitem"><i class="fas fa-circle"></i>Crispy Fried Chicken</div>
+    <div class="mqitem"><i class="fas fa-circle"></i>Gourmet Burgers</div>
+    <div class="mqitem"><i class="fas fa-circle"></i>Artisan Pizzas</div>
+    <div class="mqitem"><i class="fas fa-circle"></i>Fresh Wraps &amp; Rolls</div>
+    <div class="mqitem"><i class="fas fa-circle"></i>Loaded Fries</div>
+  </div>
+</div>
+
+<!-- CATEGORY -->
+<section id="category">
+  <div class="container">
+    <div class="text-center mb-5" data-aos="fade-up">
+      <span class="slbl">What We Offer</span>
+      <h2 class="stitle">Browse by <span>Category</span></h2>
+      <div class="sline"></div>
+      <p class="sdesc mx-auto" style="max-width:480px;">From sizzling burgers to exotic world cuisines — find your favourite in our menu</p>
+    </div>
+    <div class="row g-3 justify-content-center">
+      <div class="col-6 col-sm-4 col-md-3 col-lg-2" data-aos="zoom-in"><div class="catcard active" onclick="window.location.href='{% url 'full_menu' %}'"><img class="catimg" src="{% static 'img/category/1.jpg' %}" alt="All" onerror="this.style.display='none'"/><div class="catnm">All Items</div><div class="catct">{{ menu_items|length }}+ items</div></div></div>
+      {% for cat in categories %}
+      <div class="col-6 col-sm-4 col-md-3 col-lg-2" data-aos="zoom-in" data-aos-delay="{{ forloop.counter }}0">
+        <div class="catcard" onclick="window.location.href='{% url 'full_menu' %}?category={{ cat.slug }}'">
+          {% if cat.image %}<img class="catimg" src="{{ cat.image.url }}" alt="{{ cat.name }}"/>
+          {% else %}<img class="catimg" src="{% static 'img/category/1.jpg' %}" alt="{{ cat.name }}" onerror="this.style.display='none'"/>{% endif %}
+          <div class="catnm">{{ cat.name }}</div>
+          <div class="catct">{{ cat.item_count }} items</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-5" data-aos="fade-right">
+        <div class="astack">
+          <div class="aexp"><span class="anum">12+</span><small>Years of<br/>Excellence</small></div>
+          <div class="amain"><img src="{% static 'img/about1.jpg' %}" alt="Restaurant"/></div>
+          <div class="asm"><img src="{% static 'img/about2.jpg' %}" alt=""/></div>
+        </div>
+      </div>
+      <div class="col-lg-7" data-aos="fade-left">
+        <span class="slbl">Our Story</span>
+        <h2 class="stitle text-start">We Invite You to Visit<br/>Our <span>Food Restaurant</span></h2>
+        <div class="sline lft"></div>
+        <p class="sdesc mb-4">Founded in 2012, Sarab began as a small corner joint with a big dream — to serve food that brings people together. Today we serve thousands of happy customers every week with the same passion.</p>
+        <div class="mb-4">
+          <div class="fti"><div class="ftico r"><i class="fas fa-leaf"></i></div><div><h6>100% Fresh Ingredients</h6><p>We source locally and sustainably. Every ingredient is hand-picked daily for maximum freshness.</p></div></div>
+          <div class="fti"><div class="ftico y"><i class="fas fa-award"></i></div><div><h6>Award-Winning Recipes</h6><p>Our signature recipes have won national culinary awards 5 years in a row.</p></div></div>
+          <div class="fti"><div class="ftico g"><i class="fas fa-shipping-fast"></i></div><div><h6>Lightning-Fast Delivery</h6><p>Order online and get hot, fresh food at your door in under 25 minutes, guaranteed.</p></div></div>
+        </div>
+        <a href="{% url 'full_menu' %}" class="btn-red"><i class="fas fa-book-open"></i>View Full Menu</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MENU SECTION -->
+<section id="menu">
+  <div class="container">
+    <div class="text-center mb-5" data-aos="fade-up">
+      <span class="slbl">What's Cooking</span>
+      <h2 class="stitle">Our Delicious <span>Menu</span></h2>
+      <div class="sline"></div>
+    </div>
+    <div class="text-center mb-4" data-aos="fade-up">
+      <button class="filtbtn active" data-f="all">All</button>
+      {% for cat in categories %}<button class="filtbtn" data-f="{{ cat.slug }}">{{ cat.name }}</button>{% endfor %}
+    </div>
+    <div class="row g-4" id="mgrid">
+      {% for item in menu_items %}
+      <div class="col-sm-6 col-lg-4 mwrap" data-c="{{ item.category.slug }}" data-aos="fade-up" data-aos-delay="{{ forloop.counter0 }}0">
+        <div class="mcard"
+          data-img="{{ item.get_image_url }}"
+          data-title="{{ item.name }}"
+          data-cat="{{ item.category.name }}"
+          data-price="${{ item.price }}"
+          data-old="{% if item.old_price %}${{ item.old_price }}{% endif %}"
+          data-rating="{{ item.average_rating }}"
+          data-reviews="{{ item.review_count }}"
+          data-cal="{{ item.calories|default:'—' }}"
+          data-time="{{ item.prep_time|default:'15' }}"
+          data-desc="{{ item.description|truncatechars:160 }}"
+          data-tags="{% for tag in item.tags.all %}{{ tag.name }}{% if not forloop.last %},{% endif %}{% endfor %}"
+          data-id="{{ item.id }}">
+          <div class="mimg">
+            <img src="{{ item.get_image_url }}" alt="{{ item.name }}" onerror="this.src='{% static 'img/menu/1.jpg' %}'"/>
+            {% if item.badge %}<div class="mbdg {% if item.badge == 'new' %}new{% elif item.badge == 'hot' %}hot{% endif %}"><i class="fas fa-star"></i> {{ item.get_badge_display }}</div>{% endif %}
+            <div class="mhrt wishlist-btn" data-id="{{ item.id }}" style="cursor:pointer;"><i class="far fa-heart"></i></div>
+          </div>
+          <div class="mbody">
+            <div class="mcat">{{ item.category.name }}</div>
+            <div class="mtit">{{ item.name }}</div>
+            <div class="mdesc">{{ item.short_description }}</div>
+            <div class="mfoot">
+              <div>
+                <div class="mprice">${{ item.price }}{% if item.old_price %} <small>${{ item.old_price }}</small>{% endif %}</div>
+                <div class="mstars"><i class="fas fa-star"></i> <span style="color:#bbb;font-size:.7rem;">({{ item.review_count }})</span></div>
+              </div>
+              <button class="madd" title="View Details"><i class="fas fa-plus"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-12 text-center py-5"><p class="text-muted">Menu items coming soon! Visit the admin panel to add items.</p></div>
+      {% endfor %}
+    </div>
+
+    <!-- MENU POPUP -->
+    <div id="menuPop">
+      <div class="mpbox">
+        <button class="mpclose" id="mpClose"><i class="fas fa-times"></i></button>
+        <div class="mpimg"><img id="mpImg" src="" alt=""/></div>
+        <div class="mpbody">
+          <div id="mpCat" class="mcat"></div>
+          <div id="mpTitle"></div>
+          <div id="mpStars"></div>
+          <div id="mpDesc"></div>
+          <div id="mpPrice"></div>
+          <div class="mpmeta" id="mpMeta"></div>
+          <div class="mpqty">
+            <button class="mpqbtn" id="mpMinus">-</button>
+            <span class="mpqnum" id="mpQnum">1</span>
+            <button class="mpqbtn" id="mpPlus">+</button>
+            <span style="font-size:.82rem;color:#aaa;margin-left:9px;">portion</span>
+          </div>
+          <div class="mptags" id="mpTags"></div>
+          <button class="mpaddcart" id="mpAddCart"><i class="fas fa-shopping-cart"></i>Add to Cart</button>
+        </div>
+      </div>
+    </div>
+    <div class="text-center mt-5"><a href="{% url 'full_menu' %}" class="btn-red"><i class="fas fa-th-large"></i>View Full Menu</a></div>
+  </div>
+</section>
+
+<!-- SPECIAL OFFER -->
+<section id="special">
+  <div class="spbg"></div>
+  <div class="container" style="position:relative;z-index:2;">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6" data-aos="fade-right">
+        <div class="sptag"><i class="fas fa-bolt me-1"></i>Limited Time Offer</div>
+        <h2 class="sptitle">Get 30% Off<br/>Our Signature<br/><span>Burger</span> Meal</h2>
+        <p class="spdesc">Don't miss our weekend special — grab our award-winning signature burger combo with loaded fries and a premium shake at an unbeatable price.</p>
+        <div class="cdwrap">
+          <div class="cditem"><span class="cdnum" id="cdH">08</span><span class="cdlbl">Hours</span></div>
+          <div class="cditem"><span class="cdnum" id="cdM">45</span><span class="cdlbl">Minutes</span></div>
+          <div class="cditem"><span class="cdnum" id="cdS">30</span><span class="cdlbl">Seconds</span></div>
+        </div>
+        <a href="{% url 'full_menu' %}" class="btn-red"><i class="fas fa-shopping-cart"></i>Grab the Deal</a>
+      </div>
+      <div class="col-lg-6" data-aos="fade-left">
+        <div class="spimgw">
+          <div class="spglow"></div>
+          <div class="sppbdg"><span class="old">$24.99</span><span class="np">$17.49</span></div>
+          <img src="{% static 'img/off-img.jpg' %}" alt="Special Burger"/>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section id="gallery">
+  <div class="container">
+    <div class="text-center mb-5" data-aos="fade-up">
+      <span class="slbl">Food Showcase</span>
+      <h2 class="stitle">Let's See Our <span>Fast Food</span></h2>
+      <div class="sline"></div>
+    </div>
+    <div class="ggrid" data-aos="fade-up">
+      <div class="gitem" data-gi="0" data-gimg="{% static 'img/portfolio/work1.jpg' %}" data-gtitle="Gourmet Burgers" data-gdesc="Our award-winning smash burgers, hand-crafted with 100% premium beef, aged cheddar and house-made sauces."><img src="{% static 'img/portfolio/work1.jpg' %}" alt=""/><div class="gover"><span><i class="fas fa-expand-alt"></i> Gourmet Burgers</span></div></div>
+      <div class="gitem" data-gi="1" data-gimg="{% static 'img/portfolio/work2.jpg' %}" data-gtitle="Wood-Fired Pizza" data-gdesc="Authentic Neapolitan-style pizzas fired at 900°F in our wood-burning stone oven."><img src="{% static 'img/portfolio/work2.jpg' %}" alt=""/><div class="gover"><span><i class="fas fa-expand-alt"></i> Wood-Fired Pizza</span></div></div>
+      <div class="gitem" data-gi="2" data-gimg="{% static 'img/portfolio/work3.jpg' %}" data-gtitle="Crispy Fried Chicken" data-gdesc="Double-brined, hand-battered chicken fried to golden perfection using our 15-spice secret blend."><img src="{% static 'img/portfolio/work3.jpg' %}" alt=""/><div class="gover"><span><i class="fas fa-expand-alt"></i> Crispy Fried Chicken</span></div></div>
+      <div class="gitem" data-gi="3" data-gimg="{% static 'img/portfolio/work4.jpg' %}" data-gtitle="Sweet Desserts" data-gdesc="Handcrafted desserts from molten lava cakes to artisan ice cream sundaes."><img src="{% static 'img/portfolio/work4.jpg' %}" alt=""/><div class="gover"><span><i class="fas fa-expand-alt"></i> Sweet Desserts</span></div></div>
+      <div class="gitem" data-gi="4" data-gimg="{% static 'img/portfolio/work5.jpg' %}" data-gtitle="Fresh Wraps" data-gdesc="Loaded fresh wraps packed with grilled proteins, crunchy vegetables and our house-made sauces."><img src="{% static 'img/portfolio/work5.jpg' %}" alt=""/><div class="gover"><span><i class="fas fa-expand-alt"></i> Fresh Wraps</span></div></div>
+    </div>
+  </div>
+</section>
+<div id="galPop"><div class="gpbox"><button class="gpclose" id="gpClose"><i class="fas fa-times"></i></button><img id="gpImg" src="" alt=""/><div class="gpcap"><h5 id="gpTitle"></h5><p id="gpDesc"></p></div><div class="gpnav"><button id="gpPrev"><i class="fas fa-chevron-left me-1"></i>Prev</button><button id="gpNext">Next <i class="fas fa-chevron-right ms-1"></i></button></div></div></div>
+
+<!-- HISTORY -->
+<section id="history">
+  <div class="container">
+    <div class="text-center mb-5" data-aos="fade-up"><span class="slbl">Our Journey</span><h2 class="stitle">A History of <span>Restaurant</span></h2><div class="sline"></div></div>
+    <div class="timeline" data-aos="fade-up">
+      <div class="tli"><div class="tl-left"><div class="tlyear">2012</div><h5>The Beginning</h5><p>Sarab opens its first 20-seat diner on Flavor Street. Within 3 months, lines stretch around the block every evening.</p></div><div class="tl-center"><div class="tldot"></div></div><div class="tl-right"><div class="tlyear">2012</div><h5>The Beginning</h5><p>Sarab opens its first 20-seat diner on Flavor Street. Within 3 months, lines stretch around the block every evening.</p></div></div>
+      <div class="tli"><div class="tl-left"><div class="tlyear">2015</div><h5>Fine Dining &amp; The Concept</h5><p>We introduced our signature tasting menu and hired our first Michelin-trained chef, elevating our craft to remarkable new heights.</p></div><div class="tl-center"><div class="tldot"></div></div><div class="tl-right"><div class="tlyear">2015</div><h5>Fine Dining &amp; The Concept</h5><p>We introduced our signature tasting menu and hired our first Michelin-trained chef.</p></div></div>
+      <div class="tli"><div class="tl-left"><div class="tlyear">2019</div><h5>Modern Fast Food</h5><p>Launched our signature fast-food line, merging gourmet quality with speed and convenience. Won 3 prestigious culinary awards.</p></div><div class="tl-center"><div class="tldot"></div></div><div class="tl-right"><div class="tlyear">2019</div><h5>Modern Fast Food</h5><p>Launched our signature fast-food line, merging gourmet quality with speed and convenience.</p></div></div>
+      <div class="tli"><div class="tl-left"><div class="tlyear">2026</div><h5>National Expansion</h5><p>Now operating in 8 cities across the US with an online delivery platform handling 10,000+ orders weekly.</p></div><div class="tl-center"><div class="tldot"></div></div><div class="tl-right"><div class="tlyear">2026</div><h5>National Expansion</h5><p>Now operating in 8 cities across the US with an online delivery platform handling 10,000+ orders weekly.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CHEFS -->
+<section id="chefs">
+  <div class="container">
+    <div class="text-center mb-5" data-aos="fade-up"><span class="slbl">The Culinary Team</span><h2 class="stitle">Meet Our Expert <span>Chefs</span></h2><div class="sline"></div></div>
+    <div class="row g-4">
+      {% for c in "1234" %}
+      <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="{{ forloop.counter0 }}0">
+        <div class="chcard">
+          <div class="chimg"><img src="{% static 'img/chefs/' %}{{ c }}.jpg" alt="Chef" onerror="this.src='{% static 'img/about1.jpg' %}'"/><div class="chsoc"><a href="#"><i class="fab fa-instagram"></i></a><a href="#"><i class="fab fa-facebook-f"></i></a><a href="#"><i class="fab fa-twitter"></i></a></div></div>
+          <div class="chbody">
+            {% if c == "1" %}<div class="chnm">Alice Mortal</div><div class="chrole">Head Chef</div><div class="chexp">12 years experience</div>
+            {% elif c == "2" %}<div class="chnm">Michael Corn</div><div class="chrole">Grill Master</div><div class="chexp">8 years experience</div>
+            {% elif c == "3" %}<div class="chnm">Faz Chowdel</div><div class="chrole">Pastry Chef</div><div class="chexp">10 years experience</div>
+            {% else %}<div class="chnm">William Latnum</div><div class="chrole">Pizza Artisan</div><div class="chexp">9 years experience</div>{% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- HOURS -->
+<section id="hours">
+  <div class="hrsbg"></div>
+  <div class="container" style="position:relative;z-index:2;">
+    <div class="text-center mb-5" data-aos="fade-up"><span class="slbl" style="color:#a5d6bc;">Opening Hours</span><h2 class="stitle" style="color:#fff;">We're Open <span style="color:var(--secondary);">For You</span></h2><div class="sline"></div></div>
+    <div class="row g-4 align-items-start">
+      <div class="col-lg-5" data-aos="fade-right">
+        <div class="hrscard">
+          <div class="hrsrow"><span class="hrsday"><i class="fas fa-calendar-day me-2" style="color:var(--secondary);"></i>Monday - Tuesday</span><div class="d-flex align-items-center gap-2"><div class="hdot off"></div><span class="hrstime" style="color:#ff6b6b;">Closed</span></div></div>
+          <div class="hrsrow"><span class="hrsday"><i class="fas fa-calendar-day me-2" style="color:var(--secondary);"></i>Wednesday - Thursday</span><div class="d-flex align-items-center gap-2"><div class="hdot on"></div><span class="hrstime">09:00 AM - 10:00 PM</span></div></div>
+          <div class="hrsrow"><span class="hrsday"><i class="fas fa-calendar-day me-2" style="color:var(--secondary);"></i>Friday</span><div class="d-flex align-items-center gap-2"><div class="hdot on"></div><span class="hrstime">09:00 AM - 11:00 PM</span></div></div>
+          <div class="hrsrow"><span class="hrsday"><i class="fas fa-calendar-day me-2" style="color:var(--secondary);"></i>Saturday</span><div class="d-flex align-items-center gap-2"><div class="hdot on"></div><span class="hrstime">10:00 AM - 11:30 PM</span></div></div>
+          <div class="hrsrow"><span class="hrsday"><i class="fas fa-calendar-day me-2" style="color:var(--secondary);"></i>Sunday</span><div class="d-flex align-items-center gap-2"><div class="hdot on"></div><span class="hrstime">11:00 AM - 09:00 PM</span></div></div>
+        </div>
+      </div>
+      <div class="col-lg-3" data-aos="zoom-in"><div class="hrscta"><i class="fas fa-truck-fast fa-2x mb-3" style="color:rgba(255,255,255,.8);"></i><h4>Order Online</h4><p>Get hot food delivered in 25 minutes</p><a href="{% url 'full_menu' %}" class="btnw">Order Now →</a></div></div>
+      <div class="col-lg-4" data-aos="fade-left">
+        <div class="hrscard">
+          <h5 style="color:#fff;margin-bottom:18px;font-family:'Poppins',sans-serif;font-size:.92rem;font-weight:700;"><i class="fas fa-map-marker-alt me-2" style="color:var(--secondary);"></i>Find Us</h5>
+          <div class="hrsrow"><span class="hrsday"><i class="fas fa-location-dot me-2" style="color:var(--secondary);"></i>Address</span><span class="hrstime" style="font-size:.82rem;">42 Flavor Street, NY</span></div>
+          <div class="hrsrow"><span class="hrsday"><i class="fas fa-phone me-2" style="color:var(--secondary);"></i>Phone</span><span class="hrstime" style="font-size:.82rem;">+1 (800) 123-4567</span></div>
+          <div class="hrsrow"><span class="hrsday"><i class="fas fa-envelope me-2" style="color:var(--secondary);"></i>Email</span><span class="hrstime" style="font-size:.82rem;">hello@sarabfood.com</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div class="container">
+    <div class="text-center mb-5" data-aos="fade-up"><span class="slbl">What People Say</span><h2 class="stitle">Our Customers <span>Feedback</span></h2><div class="sline"></div></div>
+    <div class="swiper tesSwiper" data-aos="fade-up">
+      <div class="swiper-wrapper">
+        <div class="swiper-slide"><div class="tescard"><div class="tesq">"</div><div class="tess"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div><p class="testxt">Honestly the best burgers I've ever had. The smash burger is incredible — perfectly crispy edges, juicy inside, and those pickles! We come every Friday now.</p><div class="tesauth"><img src="{% static 'img/testimonial/1.jpg' %}" alt="" onerror="this.style.display='none'"/><div><div class="tesnm">Monica Wilber</div><div class="tesrl">Regular Customer</div></div></div></div></div>
+        <div class="swiper-slide"><div class="tescard"><div class="tesq">"</div><div class="tess"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div><p class="testxt">Ordered delivery and the food arrived hot and fresh in 22 minutes. Portions are generous. Sarab has become my go-to comfort food spot without question.</p><div class="tesauth"><img src="{% static 'img/testimonial/2.jpg' %}" alt="" onerror="this.style.display='none'"/><div><div class="tesnm">Cameron Fox</div><div class="tesrl">Food Blogger</div></div></div></div></div>
+        <div class="swiper-slide"><div class="tescard"><div class="tesq">"</div><div class="tess"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div><p class="testxt">The truffle pasta blew my mind. I didn't expect that quality from a fast food place. Great ambiance, super friendly staff. Highly recommended!</p><div class="tesauth"><img src="{% static 'img/testimonial/3.jpg' %}" alt="" onerror="this.style.display='none'"/><div><div class="tesnm">Priya Sharma</div><div class="tesrl">Food Enthusiast</div></div></div></div></div>
+        <div class="swiper-slide"><div class="tescard"><div class="tesq">"</div><div class="tess"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div><p class="testxt">Catered our office party of 50 people. Everything was flawless — fresh, delicious, on time. Nashville chicken was the absolute star!</p><div class="tesauth"><img src="{% static 'img/testimonial/4.jpg' %}" alt="" onerror="this.style.display='none'"/><div><div class="tesnm">David Park</div><div class="tesrl">Corporate Client</div></div></div></div></div>
+      </div>
+      <div class="swiper-pagination mt-4" style="position:static;"></div>
+    </div>
+  </div>
+</section>
+
+<!-- RESERVATION -->
+<section id="reservation">
+  <div class="container">
+    <div class="text-center mb-5" data-aos="fade-up">
+      <span class="slbl">Book a Table</span><h2 class="stitle">Make a <span>Reservation</span></h2><div class="sline"></div>
+      <p class="sdesc mx-auto" style="max-width:480px;">Reserve your table for a memorable dining experience.</p>
+    </div>
+    <div class="row g-4 align-items-start">
+      <div class="col-lg-4" data-aos="fade-right">
+        <div style="background:var(--dark);border-radius:18px;padding:36px;">
+          <h4 style="color:#fff;font-size:1.2rem;margin-bottom:8px;">Contact Info</h4>
+          <p style="color:rgba(255,255,255,.5);font-size:.84rem;margin-bottom:24px;">We're happy to help plan the perfect dining experience.</p>
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div style="display:flex;align-items:center;gap:14px;"><div style="width:44px;height:44px;border-radius:11px;background:rgba(232,40,26,.2);display:flex;align-items:center;justify-content:center;color:var(--primary);flex-shrink:0;"><i class="fas fa-clock"></i></div><div><strong style="display:block;color:#ccc;font-size:.73rem;text-transform:uppercase;letter-spacing:.8px;">Opening Hours</strong><span style="color:#fff;font-size:.86rem;">Wed - Sun, 9 AM - 11 PM</span></div></div>
+            <div style="display:flex;align-items:center;gap:14px;"><div style="width:44px;height:44px;border-radius:11px;background:rgba(232,40,26,.2);display:flex;align-items:center;justify-content:center;color:var(--primary);flex-shrink:0;"><i class="fas fa-phone-alt"></i></div><div><strong style="display:block;color:#ccc;font-size:.73rem;text-transform:uppercase;letter-spacing:.8px;">Call for Booking</strong><span style="color:#fff;font-size:.86rem;">+1 (800) 123-4567</span></div></div>
+            <div style="display:flex;align-items:center;gap:14px;"><div style="width:44px;height:44px;border-radius:11px;background:rgba(232,40,26,.2);display:flex;align-items:center;justify-content:center;color:var(--primary);flex-shrink:0;"><i class="fas fa-users"></i></div><div><strong style="display:block;color:#ccc;font-size:.73rem;text-transform:uppercase;letter-spacing:.8px;">Group Dining</strong><span style="color:#fff;font-size:.86rem;">Special menus for 10+ guests</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-8" data-aos="fade-left">
+        <div class="fcard">
+          <form id="homeResForm">{% csrf_token %}
+            <div class="row g-3">
+              <div class="col-sm-6"><label class="flbl">Full Name *</label><input type="text" class="fctrl" name="full_name" placeholder="John Doe" required value="{% if user.is_authenticated %}{{ user.get_full_name }}{% endif %}"/></div>
+              <div class="col-sm-6"><label class="flbl">Phone *</label><input type="tel" class="fctrl" name="phone" placeholder="+1 (800) 000-0000" required value="{% if user.is_authenticated %}{{ user.phone }}{% endif %}"/></div>
+              <div class="col-sm-6"><label class="flbl">Email *</label><input type="email" class="fctrl" name="email" placeholder="you@email.com" required value="{% if user.is_authenticated %}{{ user.email }}{% endif %}"/></div>
+              <div class="col-sm-6"><label class="flbl">Guests *</label><select class="fctrl" name="guests"><option value="1">1 Person</option><option value="2" selected>2 People</option><option value="4">3-4 People</option><option value="6">5-6 People</option><option value="8">7-8 People</option><option value="10">10+ People</option></select></div>
+              <div class="col-sm-6"><label class="flbl">Date *</label><input type="date" class="fctrl" name="date" id="homeResDate" required/></div>
+              <div class="col-sm-6"><label class="flbl">Time *</label><select class="fctrl" name="time"><option value="09:00">09:00 AM</option><option value="12:00">12:00 PM</option><option value="14:00">02:00 PM</option><option value="18:00">06:00 PM</option><option value="19:00" selected>07:00 PM</option><option value="20:00">08:00 PM</option><option value="21:00">09:00 PM</option></select></div>
+              <div class="col-12"><label class="flbl">Special Requests</label><textarea class="fctrl" name="special_requests" rows="3" placeholder="Allergies, dietary needs, special occasions..."></textarea></div>
+              <div class="col-12"><button type="submit" class="btn-red w-100 justify-content-center d-flex" id="homeResBtn"><i class="fas fa-calendar-check"></i>Confirm Reservation</button></div>
+            </div>
+          </form>
+          <div class="sucmsg" id="homeResOk" style="display:none;"><i class="fas fa-check-circle"></i><p>Table reserved! Code: <strong id="homeResCode" style="color:var(--primary);"></strong>. We'll confirm via email shortly.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BLOG -->
+<section id="blog">
+  <div class="container">
+    <div class="text-center mb-5" data-aos="fade-up"><span class="slbl">News &amp; Updates</span><h2 class="stitle">Our Latest <span>Blog</span> Posts</h2><div class="sline"></div></div>
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-4" data-aos="fade-up"><div class="blcard"><div class="blimg"><img src="{% static 'img/blog/1.jpg' %}" alt="" onerror="this.style.display='none'"/><div class="bldatebdg"><span class="bd">14</span><span class="bm">Mar</span></div></div><div class="blbody"><div class="bltag">Food &amp; Health</div><div class="bltit"><a href="{% url 'blog_list' %}">Healthy Fast Food: A Myth or Beautiful Reality</a></div><div class="blmeta"><span><i class="fas fa-user"></i>James Writer</span><span><i class="fas fa-comment"></i>24 Comments</span></div><a href="{% url 'blog_list' %}" class="blmore">Read More <i class="fas fa-arrow-right"></i></a></div></div></div>
+      <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="80"><div class="blcard"><div class="blimg"><img src="{% static 'img/blog/2.jpg' %}" alt="" onerror="this.style.display='none'"/><div class="bldatebdg"><span class="bd">28</span><span class="bm">Feb</span></div></div><div class="blbody"><div class="bltag">Food Science</div><div class="bltit"><a href="{% url 'blog_list' %}">Is Fast Food Getting Healthier? Here's What We Found</a></div><div class="blmeta"><span><i class="fas fa-user"></i>Sarah Grain</span><span><i class="fas fa-comment"></i>18 Comments</span></div><a href="{% url 'blog_list' %}" class="blmore">Read More <i class="fas fa-arrow-right"></i></a></div></div></div>
+      <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="160"><div class="blcard"><div class="blimg"><img src="{% static 'img/blog/3.jpg' %}" alt="" onerror="this.style.display='none'"/><div class="bldatebdg"><span class="bd">05</span><span class="bm">Jan</span></div></div><div class="blbody"><div class="bltag">Recipes</div><div class="bltit"><a href="{% url 'blog_list' %}">Innovative Hot Chickpeas Flake Crackin' Recipe</a></div><div class="blmeta"><span><i class="fas fa-user"></i>Chef Marcus</span><span><i class="fas fa-comment"></i>32 Comments</span></div><a href="{% url 'blog_list' %}" class="blmore">Read More <i class="fas fa-arrow-right"></i></a></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- NEWSLETTER -->
+<section id="newsletter">
+  <div class="nlbg"></div>
+  <div class="container">
+    <div class="nlw text-center" data-aos="zoom-in">
+      <span class="slbl" style="color:rgba(255,255,255,.7);">Stay Connected</span>
+      <h2 class="mb-3" style="color:#fff;">Subscribe &amp; Get Exclusive <span style="color:var(--secondary);">Deals</span></h2>
+      <p class="mb-4" style="color:rgba(255,255,255,.78);">Get 15% off your first order plus early access to new menu items</p>
+      <div class="nl-form-wrap">
+        <input class="nlinput" type="email" id="nlEmail" placeholder="Enter your email address..."/>
+        <button class="nlbtn" id="nlBtn"><i class="fas fa-paper-plane me-1"></i>Subscribe</button>
+      </div>
+      <p style="color:rgba(255,255,255,.45);font-size:.76rem;margin-top:11px;"><i class="fas fa-lock me-1"></i>No spam, unsubscribe anytime.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT SECTION -->
+<section id="contact-section">
+  <div class="container">
+    <div class="text-center mb-5" data-aos="fade-up">
+      <span class="slbl">Get In Touch</span><h2 class="stitle">Contact <span>Us</span></h2><div class="sline"></div>
+    </div>
+    <div class="row g-4">
+      <div class="col-lg-4" data-aos="fade-right">
+        <div class="ctdark"><h4>Let's Talk</h4><p class="ctsub">We typically respond within 2 hours during business hours.</p>
+          <div class="ctitem"><div class="cticon"><i class="fas fa-map-marker-alt"></i></div><div class="ctinfo"><strong>Address</strong><span>42 Flavor Street, Manhattan, NY 10001</span></div></div>
+          <div class="ctitem"><div class="cticon"><i class="fas fa-phone-alt"></i></div><div class="ctinfo"><strong>Phone</strong><span>+1 (800) 123-4567</span></div></div>
+          <div class="ctitem"><div class="cticon"><i class="fas fa-envelope"></i></div><div class="ctinfo"><strong>Email</strong><span>hello@sarabfood.com</span></div></div>
+          <div class="ctitem"><div class="cticon"><i class="fas fa-clock"></i></div><div class="ctinfo"><strong>Hours</strong><span>Wed - Sun: 9 AM - 11 PM</span></div></div>
+          <div class="ctsocrow"><a href="#"><i class="fab fa-facebook-f"></i></a><a href="#"><i class="fab fa-instagram"></i></a><a href="#"><i class="fab fa-twitter"></i></a><a href="#"><i class="fab fa-youtube"></i></a></div>
+        </div>
+      </div>
+      <div class="col-lg-8" data-aos="fade-left">
+        <div class="fcard">
+          <div class="row g-3">
+            <div class="col-sm-6"><label class="flbl">Your Name *</label><input type="text" class="fctrl" id="ctcName" placeholder="John Doe"/></div>
+            <div class="col-sm-6"><label class="flbl">Email Address *</label><input type="email" class="fctrl" id="ctcEmail" placeholder="you@email.com"/></div>
+            <div class="col-sm-6"><label class="flbl">Phone</label><input type="tel" class="fctrl" id="ctcPhone" placeholder="+1 (800) 000-0000"/></div>
+            <div class="col-sm-6"><label class="flbl">Subject *</label><select class="fctrl" id="ctcSubject"><option>General Inquiry</option><option>Catering &amp; Events</option><option>Feedback</option><option>Partnership</option><option>Media &amp; Press</option></select></div>
+            <div class="col-12"><label class="flbl">Message *</label><textarea class="fctrl" rows="5" id="ctcMsg" placeholder="Write your message here..."></textarea></div>
+            <div class="col-12"><button class="btn-red" id="ctcBtn"><i class="fas fa-paper-plane"></i>Send Message</button></div>
+          </div>
+          <div class="sucmsg" id="ctcOk" style="display:none;"><i class="fas fa-check-circle"></i><p>Message sent! We'll reply within 2 hours.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/main.js' %}"></script>
+<script>
+// Min date
+document.getElementById('homeResDate').min = new Date().toISOString().split('T')[0];
+
+// Menu popup add-to-cart override
+var mpCurrentId = null;
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('.mcard').forEach(function(card){
+    card.addEventListener('click', function(e){
+      if(e.target.closest('.mhrt')) return;
+      mpCurrentId = this.dataset.id || null;
+    });
+  });
+  document.querySelectorAll('.madd').forEach(function(btn){
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      mpCurrentId = this.closest('.mcard').dataset.id || null;
+    });
+  });
+});
+document.getElementById('mpAddCart').addEventListener('click', function(){
+  if (!mpCurrentId) return;
+  const qty = parseInt(document.getElementById('mpQnum').textContent) || 1;
+  const btn = this;
+  apiPost(URL_CART_ADD + mpCurrentId + '/', {quantity: qty}).then(d=>{
+    updateBadge(d.cart_count);
+    toast(d.message || 'Added to cart!');
+    btn.innerHTML = '<i class="fas fa-check"></i> Added!';
+    btn.style.background = 'linear-gradient(135deg,#2d6a4f,#1a4a35)';
+    setTimeout(()=>{
+      document.getElementById('menuPop').classList.remove('open');
+      document.body.style.overflow = '';
+      btn.innerHTML = '<i class="fas fa-shopping-cart"></i>Add to Cart';
+      btn.style.background = '';
+    }, 1200);
+  });
+});
+
+// Gallery popup
+var galData=[], galIdx=0;
+document.querySelectorAll('.gitem').forEach(function(item){
+  galData.push({img:item.dataset.gimg,title:item.dataset.gtitle,desc:item.dataset.gdesc});
+  item.addEventListener('click',function(){openGal(parseInt(this.dataset.gi));});
+});
+function openGal(i){
+  galIdx=i; var g=galData[i];
+  document.getElementById('gpImg').src=g.img;
+  document.getElementById('gpTitle').textContent=g.title;
+  document.getElementById('gpDesc').textContent=g.desc;
+  document.getElementById('galPop').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+document.getElementById('gpClose').addEventListener('click',()=>{document.getElementById('galPop').classList.remove('open');document.body.style.overflow='';});
+document.getElementById('galPop').addEventListener('click',function(e){if(e.target===this){this.classList.remove('open');document.body.style.overflow='';}});
+document.getElementById('gpPrev').addEventListener('click',()=>openGal((galIdx-1+galData.length)%galData.length));
+document.getElementById('gpNext').addEventListener('click',()=>openGal((galIdx+1)%galData.length));
+
+// Swiper
+new Swiper('.tesSwiper',{slidesPerView:1,spaceBetween:22,loop:true,autoplay:{delay:4200,disableOnInteraction:false},pagination:{el:'.swiper-pagination',clickable:true},breakpoints:{640:{slidesPerView:2},1024:{slidesPerView:3}}});
+
+// Countdown
+var cH=8,cM=45,cS=30;
+setInterval(function(){cS--;if(cS<0){cS=59;cM--;}if(cM<0){cM=59;cH--;}if(cH<0){cH=8;cM=45;cS=30;}document.getElementById('cdH').textContent=String(cH).padStart(2,'0');document.getElementById('cdM').textContent=String(cM).padStart(2,'0');document.getElementById('cdS').textContent=String(cS).padStart(2,'0');},1000);
+
+// Magnific
+$(document).ready(function(){$('.magnific_popup').magnificPopup({disableOn:300,type:'iframe',mainClass:'mfp-fade',removalDelay:160,preloader:false,fixedContentPos:false});});
+
+// Home Reservation
+document.getElementById('homeResForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  const btn=document.getElementById('homeResBtn');
+  btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Booking...'; btn.disabled=true;
+  const fd=new FormData(this),data={};
+  fd.forEach((v,k)=>{data[k]=v;});
+  fetch('{% url "make_reservation" %}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},body:JSON.stringify(data)})
+  .then(r=>r.json()).then(d=>{
+    btn.innerHTML='<i class="fas fa-calendar-check"></i>Confirm Reservation'; btn.disabled=false;
+    if(d.status==='ok'){
+      document.getElementById('homeResCode').textContent=d.confirmation_code;
+      const ok=document.getElementById('homeResOk');
+      ok.style.display='flex'; ok.scrollIntoView({behavior:'smooth',block:'nearest'});
+      toast('Reservation confirmed! Code: '+d.confirmation_code);
+      this.reset();
+    } else { toast('Please check your form and try again.','error'); }
+  }).catch(()=>{btn.innerHTML='<i class="fas fa-calendar-check"></i>Confirm Reservation';btn.disabled=false;});
+});
+
+// Contact
+document.getElementById('ctcBtn').addEventListener('click',function(){
+  const name=document.getElementById('ctcName').value.trim(),email=document.getElementById('ctcEmail').value.trim(),msg=document.getElementById('ctcMsg').value.trim();
+  if(!name||!email||!msg){toast('Please fill all required fields.','error');return;}
+  const btn=this; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Sending...'; btn.disabled=true;
+  fetch('{% url "contact_submit" %}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},body:JSON.stringify({name,email,phone:document.getElementById('ctcPhone').value,subject:document.getElementById('ctcSubject').value,message:msg})})
+  .then(r=>r.json()).then(d=>{btn.innerHTML='<i class="fas fa-paper-plane"></i>Send Message';btn.disabled=false;document.getElementById('ctcOk').style.display='flex';toast(d.message||'Message sent!');});
+});
+
+// Newsletter
+document.getElementById('nlBtn').addEventListener('click',function(){
+  const email=document.getElementById('nlEmail').value.trim();
+  if(!email||!email.includes('@')){toast('Please enter a valid email.','error');return;}
+  fetch('{% url "newsletter_subscribe" %}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},body:JSON.stringify({email})})
+  .then(r=>r.json()).then(d=>{toast(d.message);if(d.status==='ok'){document.getElementById('nlEmail').value='';this.textContent='✓ Subscribed!';}});
+});
+
+// Counter
+var counted=false;
+window.addEventListener('scroll',function(){
+  if(!counted&&window.scrollY>300){counted=true;
+    document.querySelectorAll('.snum').forEach(function(el){
+      var txt=el.textContent,num=parseInt(txt),suf=txt.replace(/[0-9]/g,'');
+      if(isNaN(num))return;
+      var s=0,step=Math.ceil(num/55);
+      var iv=setInterval(function(){s+=step;if(s>=num){s=num;clearInterval(iv);}el.textContent=s+suf;},1400/55);
+    });
+  }
+});
+</script>
+{% endblock %}

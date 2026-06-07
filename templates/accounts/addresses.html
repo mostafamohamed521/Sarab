@@ -1,0 +1,68 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}My Addresses - Sarab{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="container">
+    <span class="slbl">Delivery Addresses</span>
+    <h1 class="stitle">My <span>Addresses</span></h1>
+  </div>
+</div>
+<section style="padding:50px 0;background:var(--cream);">
+  <div class="container">
+    <div class="row g-4">
+      {% for addr in addresses %}
+      <div class="col-md-6" data-aos="fade-up">
+        <div class="addr-card {% if addr.is_default %}default-card{% endif %}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="addr-type-icon"><i class="fas fa-{% if addr.label == 'home' %}home{% elif addr.label == 'work' %}briefcase{% else %}map-marker-alt{% endif %}"></i></div>
+              <div>
+                <strong style="font-size:.92rem;color:var(--dark);">{{ addr.get_label_display }}</strong>
+                {% if addr.is_default %}<span class="ttag" style="font-size:.68rem;margin-left:6px;padding:2px 8px;background:rgba(232,40,26,.12);color:var(--primary);">Default</span>{% endif %}
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <a href="{% url 'edit_address' addr.pk %}" style="padding:6px 12px;border:1.5px solid #eee;border-radius:8px;color:#666;font-size:.8rem;transition:.2s;" onmouseenter="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'" onmouseleave="this.style.borderColor='#eee';this.style.color='#666'"><i class="fas fa-pen"></i></a>
+              <form method="POST" action="{% url 'delete_address' addr.pk %}" onsubmit="return confirm('Delete this address?');" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" style="padding:6px 12px;border:1.5px solid rgba(232,40,26,.25);border-radius:8px;color:var(--primary);font-size:.8rem;background:none;cursor:pointer;"><i class="fas fa-trash-alt"></i></button>
+              </form>
+            </div>
+          </div>
+          <div class="addr-info">
+            <strong>{{ addr.full_name }}</strong><br/>
+            {{ addr.street_address }}<br/>
+            {{ addr.city }}, {{ addr.state }} {{ addr.zip_code }}<br/>
+            {{ addr.country }}<br/>
+            <i class="fas fa-phone me-1" style="color:var(--primary);"></i>{{ addr.phone }}
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-12"><div class="empty-box" style="padding:40px;"><i class="fas fa-map-marker-alt empty-box-icon" style="font-size:2.8rem;"></i><h3>No addresses saved</h3><p>Add your delivery addresses for faster checkout.</p></div></div>
+      {% endfor %}
+
+      <!-- Add New -->
+      <div class="col-md-6" data-aos="fade-up">
+        <div class="box-card" style="height:100%;margin-bottom:0;">
+          <div class="box-card-title"><i class="fas fa-plus"></i>Add New Address</div>
+          <form method="POST" action="{% url 'add_address' %}">{% csrf_token %}
+            <div class="row g-2">
+              <div class="col-12"><select name="label" class="fctrl"><option value="home">🏠 Home</option><option value="work">💼 Work</option><option value="other">📍 Other</option></select></div>
+              <div class="col-sm-6"><input type="text" name="full_name" class="fctrl" placeholder="Full Name" required/></div>
+              <div class="col-sm-6"><input type="tel" name="phone" class="fctrl" placeholder="Phone" required/></div>
+              <div class="col-12"><input type="text" name="street_address" class="fctrl" placeholder="Street Address" required/></div>
+              <div class="col-sm-4"><input type="text" name="city" class="fctrl" placeholder="City" required/></div>
+              <div class="col-sm-4"><input type="text" name="state" class="fctrl" placeholder="State" required/></div>
+              <div class="col-sm-4"><input type="text" name="zip_code" class="fctrl" placeholder="ZIP" required/></div>
+              <div class="col-12"><label style="font-size:.83rem;display:flex;align-items:center;gap:6px;cursor:pointer;color:#666;"><input type="checkbox" name="is_default" style="accent-color:var(--primary);"/> Set as default address</label></div>
+              <div class="col-12 mt-1"><button type="submit" class="btn-red w-100 justify-content-center d-flex"><i class="fas fa-save"></i>Save Address</button></div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}FAQ - Sarab{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="container">
+    <span class="slbl">Questions & Answers</span>
+    <h1 class="stitle">Frequently Asked <span>Questions</span></h1>
+    <div class="sline" style="margin:12px auto;"></div>
+    <p class="sdesc">Everything you need to know about ordering, delivery, and dining at Sarab.</p>
+  </div>
+</div>
+<section style="padding:65px 0;background:var(--cream);">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="accordion" id="faqAcc">
+          {% if faqs %}
+            {% for faq in faqs %}
+            <div class="accordion-item" style="border:none;border-radius:14px;margin-bottom:10px;overflow:hidden;box-shadow:0 2px 14px rgba(0,0,0,.06);">
+              <h2 class="accordion-header">
+                <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#faq{{ faq.id }}" style="font-weight:600;font-size:.9rem;background:#fff;color:var(--dark);border-radius:14px;gap:12px;">
+                  <i class="fas fa-question-circle" style="color:var(--primary);font-size:1rem;flex-shrink:0;"></i>{{ faq.question }}
+                </button>
+              </h2>
+              <div id="faq{{ faq.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" data-bs-parent="#faqAcc">
+                <div class="accordion-body" style="color:#666;font-size:.88rem;line-height:1.8;padding:18px 24px 22px;">{{ faq.answer }}</div>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            {% for q,a in faq_defaults %}
+            <div class="accordion-item" style="border:none;border-radius:14px;margin-bottom:10px;overflow:hidden;box-shadow:0 2px 14px rgba(0,0,0,.06);">
+              <h2 class="accordion-header">
+                <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#dfaq{{ forloop.counter }}" style="font-weight:600;font-size:.9rem;background:#fff;color:var(--dark);gap:12px;">
+                  <i class="fas fa-question-circle" style="color:var(--primary);font-size:1rem;flex-shrink:0;"></i>{{ q }}
+                </button>
+              </h2>
+              <div id="dfaq{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" data-bs-parent="#faqAcc">
+                <div class="accordion-body" style="color:#666;font-size:.88rem;line-height:1.8;padding:18px 24px 22px;">{{ a }}</div>
+              </div>
+            </div>
+            {% endfor %}
+          {% endif %}
+        </div>
+
+        <div style="background:#fff;border-radius:16px;padding:30px;margin-top:32px;text-align:center;box-shadow:0 4px 18px rgba(0,0,0,.07);" data-aos="fade-up">
+          <h5 style="font-family:'Playfair Display',serif;margin-bottom:10px;">Still have questions?</h5>
+          <p style="color:#888;font-size:.87rem;margin-bottom:18px;">Our team is happy to help you any time.</p>
+          <a href="{% url 'contact' %}" class="btn-red"><i class="fas fa-envelope"></i>Contact Us</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}Reservation Confirmed - Sarab{% endblock %}
+{% block content %}
+<div class="result-wrap">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-5">
+        <div class="result-card">
+          <div class="result-icon cal"><i class="fas fa-calendar-check fa-2x" style="color:#fff;"></i></div>
+          <h2>Reservation Confirmed!</h2>
+          <p>We're looking forward to seeing you, <strong>{{ reservation.full_name }}</strong>!</p>
+          <div class="result-detail-box">
+            <div class="conf-grid">
+              <div><div style="font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Confirmation Code</div><div style="font-weight:700;color:var(--primary);font-size:1.05rem;">{{ reservation.confirmation_code }}</div></div>
+              <div><div style="font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Status</div><span class="status-badge pending">Pending Confirmation</span></div>
+              <div><div style="font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Date</div><div style="font-weight:600;font-size:.9rem;color:var(--dark);">{{ reservation.date|date:"l, M d, Y" }}</div></div>
+              <div><div style="font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Time</div><div style="font-weight:600;font-size:.9rem;color:var(--dark);">{{ reservation.time|time:"g:i A" }}</div></div>
+              <div><div style="font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Guests</div><div style="font-weight:600;font-size:.9rem;color:var(--dark);">{{ reservation.guests }} People</div></div>
+              {% if reservation.occasion %}<div><div style="font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Occasion</div><div style="font-weight:600;font-size:.9rem;color:var(--dark);">{{ reservation.get_occasion_display }}</div></div>{% endif %}
+            </div>
+            {% if reservation.special_requests %}
+            <div style="border-top:1px solid #eee;padding-top:12px;margin-top:4px;">
+              <div style="font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Special Requests</div>
+              <div style="font-size:.86rem;color:#666;">{{ reservation.special_requests }}</div>
+            </div>
+            {% endif %}
+          </div>
+          <div style="background:#fff8f0;border-radius:12px;padding:13px 16px;margin-bottom:22px;font-size:.82rem;color:#888;text-align:left;"><i class="fas fa-info-circle me-2" style="color:var(--secondary);"></i>We'll call or email to confirm within 2 hours. Please arrive 5 minutes early.</div>
+          <div class="result-actions">
+            {% if user.is_authenticated %}<a href="{% url 'reservation_history' %}" class="btn-red"><i class="fas fa-list"></i>My Reservations</a>{% endif %}
+            <a href="{% url 'full_menu' %}" class="btn btn-outline-secondary" style="border-radius:50px;padding:13px 22px;font-size:.88rem;"><i class="fas fa-utensils me-2"></i>View Menu</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}Order Confirmed! - Sarab{% endblock %}
+{% block content %}
+<div class="result-wrap">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-5">
+        <div class="result-card">
+          <div class="result-icon success"><i class="fas fa-check fa-2x" style="color:#fff;"></i></div>
+          <h2>Order Confirmed!</h2>
+          <p>Thank you, <strong>{{ order.full_name }}</strong>!</p>
+          <p>A confirmation has been sent to <strong>{{ order.email }}</strong></p>
+          <div class="result-detail-box">
+            <div class="result-detail-row"><span class="lbl">Order Number</span><span class="val highlight">{{ order.order_number }}</span></div>
+            <div class="result-detail-row"><span class="lbl">Payment</span><span class="val">{{ order.get_payment_method_display }}</span></div>
+            <div class="result-detail-row"><span class="lbl">Estimated Delivery</span><span class="val">~30 minutes</span></div>
+            <div class="result-detail-row" style="border-top:1px solid #eee;padding-top:12px;margin-top:4px;"><span class="lbl" style="font-weight:700;">Total Charged</span><span class="val highlight" style="font-size:1.15rem;">${{ order.total }}</span></div>
+          </div>
+          <div style="margin-bottom:20px;text-align:left;">
+            <p style="font-size:.83rem;color:#888;font-weight:600;margin-bottom:10px;">Items Ordered:</p>
+            {% for item in order.items.all %}
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f5f5f5;font-size:.86rem;">
+              <span style="color:#555;">{{ item.name }} <span style="color:#bbb;">×{{ item.quantity }}</span></span>
+              <span style="font-weight:600;">${{ item.subtotal }}</span>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="result-actions">
+            <a href="{% url 'order_tracking' order.order_number %}" class="btn-red"><i class="fas fa-map-marker-alt"></i>Track Order</a>
+            <a href="{% url 'invoice' order.order_number %}" class="btn btn-outline-secondary" style="border-radius:50px;padding:13px 22px;font-size:.88rem;"><i class="fas fa-file-invoice me-2"></i>Invoice</a>
+          </div>
+          <a href="{% url 'full_menu' %}" style="display:block;text-align:center;margin-top:16px;font-size:.83rem;color:#aaa;">← Continue Shopping</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

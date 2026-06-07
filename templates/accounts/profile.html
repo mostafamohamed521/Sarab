@@ -1,0 +1,85 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}My Profile - Sarab{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="container">
+    <span class="slbl">My Account</span>
+    <h1 class="stitle">My <span>Profile</span></h1>
+  </div>
+</div>
+<section style="padding:50px 0;background:var(--cream);">
+  <div class="container">
+    <div class="row g-4 align-items-start">
+      <!-- Sidebar -->
+      <div class="col-lg-3 col-md-4">
+        <div class="acc-sidebar">
+          {% if user.avatar %}
+          <img src="{{ user.avatar.url }}" class="acc-avatar-ring" alt=""/>
+          {% else %}
+          <div class="acc-avatar-placeholder"><i class="fas fa-user"></i></div>
+          {% endif %}
+          <div class="acc-name">{{ user.get_full_name|default:"My Account" }}</div>
+          <div class="acc-email">{{ user.email }}</div>
+          <nav>
+            <a href="{% url 'profile' %}" class="acc-nav-link active"><i class="fas fa-user"></i>Profile</a>
+            <a href="{% url 'order_history' %}" class="acc-nav-link"><i class="fas fa-receipt"></i>My Orders</a>
+            <a href="{% url 'reservation_history' %}" class="acc-nav-link"><i class="fas fa-calendar"></i>Reservations</a>
+            <a href="{% url 'wishlist' %}" class="acc-nav-link"><i class="fas fa-heart"></i>Wishlist</a>
+            <a href="{% url 'addresses' %}" class="acc-nav-link"><i class="fas fa-map-marker-alt"></i>Addresses</a>
+            {% if user.is_staff %}<a href="/admin/" class="acc-nav-link"><i class="fas fa-cog"></i>Admin Panel</a>{% endif %}
+            <a href="{% url 'logout' %}" class="acc-nav-link logout"><i class="fas fa-sign-out-alt"></i>Logout</a>
+          </nav>
+        </div>
+      </div>
+      <!-- Main -->
+      <div class="col-lg-9 col-md-8">
+        <div class="box-card">
+          <div class="box-card-title"><i class="fas fa-user"></i>Edit Profile</div>
+          <form method="POST" enctype="multipart/form-data">{% csrf_token %}
+            <div class="row g-3">
+              <div class="col-sm-6"><label class="flbl">First Name</label><input type="text" name="first_name" class="fctrl" value="{{ user.first_name }}"/></div>
+              <div class="col-sm-6"><label class="flbl">Last Name</label><input type="text" name="last_name" class="fctrl" value="{{ user.last_name }}"/></div>
+              <div class="col-sm-6"><label class="flbl">Phone</label><input type="tel" name="phone" class="fctrl" value="{{ user.phone }}"/></div>
+              <div class="col-sm-6"><label class="flbl">Date of Birth</label><input type="date" name="date_of_birth" class="fctrl" value="{% if user.date_of_birth %}{{ user.date_of_birth|date:'Y-m-d' }}{% endif %}"/></div>
+              <div class="col-12"><label class="flbl">Bio</label><textarea name="bio" class="fctrl" rows="3" placeholder="Tell us about yourself...">{{ user.bio }}</textarea></div>
+              <div class="col-12">
+                <label class="flbl">Profile Photo</label>
+                <input type="file" name="avatar" class="fctrl" accept="image/*"/>
+              </div>
+              <div class="col-12 mt-2"><button type="submit" class="btn-red"><i class="fas fa-save"></i>Save Changes</button></div>
+            </div>
+          </form>
+        </div>
+        {% if orders %}
+        <div class="box-card">
+          <div class="box-card-title" style="display:flex;justify-content:space-between;align-items:center;"><span><i class="fas fa-receipt"></i>Recent Orders</span><a href="{% url 'order_history' %}" style="font-size:.82rem;color:var(--primary);font-family:'Poppins',sans-serif;font-weight:600;">View All →</a></div>
+          <div class="table-responsive">
+            <table style="width:100%;border-collapse:collapse;font-size:.85rem;">
+              <thead><tr style="background:var(--cream);">
+                <th style="padding:11px 14px;text-align:left;color:#888;font-size:.73rem;text-transform:uppercase;letter-spacing:.6px;border-radius:8px 0 0 8px;">Order #</th>
+                <th style="padding:11px 14px;text-align:left;color:#888;font-size:.73rem;text-transform:uppercase;letter-spacing:.6px;">Date</th>
+                <th style="padding:11px 14px;text-align:left;color:#888;font-size:.73rem;text-transform:uppercase;letter-spacing:.6px;">Total</th>
+                <th style="padding:11px 14px;text-align:left;color:#888;font-size:.73rem;text-transform:uppercase;letter-spacing:.6px;">Status</th>
+                <th style="padding:11px 14px;border-radius:0 8px 8px 0;"></th>
+              </tr></thead>
+              <tbody>
+                {% for order in orders %}
+                <tr style="border-bottom:1px solid #f5f5f5;">
+                  <td style="padding:13px 14px;font-weight:700;color:var(--primary);">{{ order.order_number }}</td>
+                  <td style="padding:13px 14px;color:#777;">{{ order.created_at|date:"M d, Y" }}</td>
+                  <td style="padding:13px 14px;font-weight:700;">${{ order.total }}</td>
+                  <td style="padding:13px 14px;"><span class="status-badge {{ order.status }}">{{ order.get_status_display }}</span></td>
+                  <td style="padding:13px 14px;"><a href="{% url 'order_detail' order.order_number %}" style="color:var(--primary);font-size:.8rem;font-weight:600;">Details →</a></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

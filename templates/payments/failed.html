@@ -1,0 +1,23 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}Payment Failed - Sarab{% endblock %}
+{% block content %}
+<div class="result-wrap">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-5">
+        <div class="result-card">
+          <div class="result-icon error"><i class="fas fa-times fa-2x" style="color:#fff;"></i></div>
+          <h2>Payment Failed</h2>
+          <p>We couldn't process your payment for order <strong>#{{ order.order_number }}</strong>.</p>
+          <p style="color:#aaa;font-size:.87rem;">Please check your card details and try again, or choose a different payment method.</p>
+          <div class="result-actions">
+            <a href="{% url 'payment_stripe' order.id %}" class="btn-red"><i class="fas fa-redo"></i>Try Again</a>
+            <a href="{% url 'checkout' %}" class="btn btn-outline-secondary" style="border-radius:50px;padding:13px 22px;font-size:.88rem;"><i class="fas fa-arrow-left me-2"></i>Back to Checkout</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

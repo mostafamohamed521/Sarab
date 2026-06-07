@@ -1,0 +1,454 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Sarab - Fast Food & Restaurant{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet"/>
+  <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet"/>
+  <link href="{% static 'css/aos.css' %}" rel="stylesheet"/>
+  <link href="{% static 'css/swiper-bundle.min.css' %}" rel="stylesheet"/>
+  <link rel="stylesheet" href="{% static 'css/all.min.css' %}"/>
+  <link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}"/>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+  <link rel="stylesheet" href="{% static 'css/sarab-extra.css' %}"/>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+{% if messages %}
+<div style="position:fixed;top:80px;right:18px;z-index:99998;max-width:360px;">
+  {% for message in messages %}
+  <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %} alert-dismissible shadow" style="border-radius:12px;font-size:.87rem;">
+    {{ message }}<button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div class="top-contact d-flex flex-wrap">
+        <span><i class="fas fa-phone-alt"></i>+1 (800) 123-4567</span>
+        <span><i class="fas fa-envelope"></i>hello@sarabfood.com</span>
+        <span><i class="fas fa-map-marker-alt"></i>42 Flavor Street, NY</span>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <span class="ttag"><i class="fas fa-fire me-1"></i>Free Delivery Today!</span>
+        <div class="tsoc">
+          <a href="#"><i class="fab fa-facebook-f"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-tiktok"></i></a>
+          <a href="#"><i class="fab fa-youtube"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg" id="nav">
+  <div class="container">
+    <a class="navbar-brand" href="{% url 'home' %}">
+      <div class="blogo">
+        <div class="bico"><i class="fas fa-utensils"></i></div>
+        <div>
+          <div class="bname">Sar<span>ab</span></div>
+          <div class="bsub">Fast Food &amp; Restaurant</div>
+        </div>
+      </div>
+    </a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu">
+      <i class="fas fa-bars" style="color:var(--primary);font-size:1.3rem;"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navmenu">
+      <ul class="navbar-nav mx-auto">
+        <li class="nav-item"><a class="nav-link {% block nav_home %}{% endblock %}" href="{% url 'home' %}">Home</a></li>
+        <li class="nav-item"><a class="nav-link {% block nav_menu %}{% endblock %}" href="{% url 'full_menu' %}">Menu</a></li>
+        <li class="nav-item"><a class="nav-link {% block nav_reservation %}{% endblock %}" href="{% url 'make_reservation' %}">Reservation</a></li>
+        <li class="nav-item"><a class="nav-link {% block nav_blog %}{% endblock %}" href="{% url 'blog_list' %}">Blog</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Pages</a>
+          <ul class="dropdown-menu" style="border:none;box-shadow:0 10px 40px rgba(0,0,0,.12);border-radius:14px;padding:8px;">
+            <li><a class="dropdown-item" style="border-radius:8px;padding:9px 16px;font-size:.87rem;" href="{% url 'about' %}"><i class="fas fa-info-circle me-2" style="color:var(--primary);"></i>About Us</a></li>
+            <li><a class="dropdown-item" style="border-radius:8px;padding:9px 16px;font-size:.87rem;" href="{% url 'faq' %}"><i class="fas fa-question-circle me-2" style="color:var(--primary);"></i>FAQ</a></li>
+            <li><a class="dropdown-item" style="border-radius:8px;padding:9px 16px;font-size:.87rem;" href="{% url 'contact' %}"><i class="fas fa-envelope me-2" style="color:var(--primary);"></i>Contact</a></li>
+          </ul>
+        </li>
+        {% if user.is_authenticated %}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+            <i class="fas fa-user-circle me-1" style="color:var(--primary);"></i>{{ user.first_name|default:user.email|truncatechars:14 }}
+          </a>
+          <ul class="dropdown-menu" style="border:none;box-shadow:0 10px 40px rgba(0,0,0,.12);border-radius:14px;padding:8px;min-width:200px;">
+            <li><a class="dropdown-item" style="border-radius:8px;padding:9px 16px;font-size:.86rem;" href="{% url 'profile' %}"><i class="fas fa-user me-2" style="color:var(--primary);"></i>Profile</a></li>
+            <li><a class="dropdown-item" style="border-radius:8px;padding:9px 16px;font-size:.86rem;" href="{% url 'order_history' %}"><i class="fas fa-receipt me-2" style="color:var(--primary);"></i>My Orders</a></li>
+            <li><a class="dropdown-item" style="border-radius:8px;padding:9px 16px;font-size:.86rem;" href="{% url 'reservation_history' %}"><i class="fas fa-calendar me-2" style="color:var(--primary);"></i>Reservations</a></li>
+            <li><a class="dropdown-item" style="border-radius:8px;padding:9px 16px;font-size:.86rem;" href="{% url 'wishlist' %}"><i class="fas fa-heart me-2" style="color:var(--primary);"></i>Wishlist</a></li>
+            <li><a class="dropdown-item" style="border-radius:8px;padding:9px 16px;font-size:.86rem;" href="{% url 'addresses' %}"><i class="fas fa-map-marker me-2" style="color:var(--primary);"></i>Addresses</a></li>
+            <li><hr class="dropdown-divider" style="margin:4px 8px;"></li>
+            {% if user.is_staff or user.is_superuser %}
+            <li><a class="dropdown-item" style="border-radius:8px;padding:9px 16px;font-size:.86rem;" href="/admin/"><i class="fas fa-cog me-2" style="color:var(--primary);"></i>Admin Panel</a></li>
+            {% endif %}
+            <li><a class="dropdown-item" style="border-radius:8px;padding:9px 16px;font-size:.86rem;color:var(--primary)!important;" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+          </ul>
+        </li>
+        {% else %}
+        <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'register' %}">Register</a></li>
+        {% endif %}
+      </ul>
+      <div class="d-flex align-items-center gap-1">
+        <button id="navSearchBtn" title="Search"><i class="fas fa-search"></i></button>
+        {% if user.is_authenticated %}
+        <a href="{% url 'wishlist' %}" style="background:none;border:none;cursor:pointer;padding:8px 10px;color:#555;font-size:1rem;border-radius:8px;transition:.3s;display:inline-flex;align-items:center;"><i class="fas fa-heart"></i></a>
+        {% endif %}
+        <button id="cartBtn" style="background:none;border:none;cursor:pointer;position:relative;padding:8px 10px;color:#555;font-size:1rem;border-radius:8px;transition:.3s;">
+          <i class="fas fa-shopping-cart"></i>
+          <span id="cartBadge" style="position:absolute;top:-1px;right:-1px;background:var(--primary);color:#fff;border-radius:50%;width:18px;height:18px;font-size:.62rem;display:flex;align-items:center;justify-content:center;font-weight:700;">{{ cart_count }}</span>
+        </button>
+        <a href="{% url 'full_menu' %}" class="nav-link nav-cta"><i class="fas fa-shopping-bag me-1"></i>Order Now</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- SEARCH OVERLAY -->
+<div id="searchOv">
+  <button class="sovclose" id="searchClose"><i class="fas fa-times"></i></button>
+  <div class="sovbox">
+    <h4>What are you craving today?</h4>
+    <div class="sovinput">
+      <input type="text" id="searchInput" placeholder="Search burgers, pizza, chicken..." autocomplete="off"/>
+      <button onclick="doSearch()"><i class="fas fa-search"></i></button>
+    </div>
+    <div class="sovcats">
+      {% for cat in all_categories %}
+      <div class="sovcat" onclick="window.location.href='{% url 'full_menu' %}?category={{ cat.slug }}'">
+        <img src="{% static 'img/category/1.jpg' %}" alt="" onerror="this.style.display='none'"/>{{ cat.name }}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="sovtrend">
+      <p><i class="fas fa-fire me-1" style="color:var(--secondary);"></i>Trending Searches</p>
+      <span class="ttag" onclick="fillSearch(this)" style="cursor:pointer;">Smash Burger</span>
+      <span class="ttag" onclick="fillSearch(this)" style="cursor:pointer;">Nashville Chicken</span>
+      <span class="ttag" onclick="fillSearch(this)" style="cursor:pointer;">Truffle Pizza</span>
+      <span class="ttag" onclick="fillSearch(this)" style="cursor:pointer;">Lava Cake</span>
+    </div>
+    <div id="searchResults" style="margin-top:18px;"></div>
+  </div>
+</div>
+
+<!-- CART SIDEBAR -->
+<div id="cartOverlay" onclick="closeCart()" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;display:none;"></div>
+<div id="cartSidebar" style="position:fixed;top:0;right:-440px;width:420px;height:100vh;background:#fff;z-index:9999;box-shadow:-4px 0 30px rgba(0,0,0,.15);transition:.35s;display:flex;flex-direction:column;max-width:100vw;">
+  <div style="padding:20px 22px 14px;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+    <h5 style="margin:0;font-family:'Playfair Display',serif;font-size:1.1rem;">My Cart <span id="sidebarCount" style="color:var(--primary);">({{ cart_count }})</span></h5>
+    <button onclick="closeCart()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#888;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:.2s;" onmouseenter="this.style.background='#f5f5f5'" onmouseleave="this.style.background='none'"><i class="fas fa-times"></i></button>
+  </div>
+  <div id="cartItemsList" style="flex:1;overflow-y:auto;padding:6px 0;">
+    {% if cart_count > 0 %}
+      {% for item in cart %}
+      <div class="sidebar-item" id="si-{{ item.item.id }}" style="display:flex;gap:12px;padding:14px 18px;border-bottom:1px solid #f5f5f5;align-items:center;">
+        <img src="{{ item.image }}" alt="{{ item.name }}" style="width:58px;height:58px;border-radius:10px;object-fit:cover;flex-shrink:0;" onerror="this.src='{% static 'img/menu/1.jpg' %}'"/>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:.85rem;color:var(--dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ item.name }}</div>
+          <div style="color:var(--primary);font-size:.83rem;font-weight:700;">${{ item.price }}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
+          <button onclick="sidebarQty({{ item.item.id }},-1)" style="width:26px;height:26px;border-radius:50%;border:1.5px solid #ddd;background:#fff;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;font-weight:700;">-</button>
+          <span id="sq-{{ item.item.id }}" style="font-weight:700;min-width:20px;text-align:center;font-size:.9rem;">{{ item.quantity }}</span>
+          <button onclick="sidebarQty({{ item.item.id }},1)" style="width:26px;height:26px;border-radius:50%;border:1.5px solid #ddd;background:#fff;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;font-weight:700;">+</button>
+          <button onclick="sidebarRemove({{ item.item.id }})" style="width:26px;height:26px;border-radius:50%;border:1.5px solid rgba(232,40,26,.3);background:#fff;cursor:pointer;font-size:.72rem;display:flex;align-items:center;justify-content:center;color:var(--primary);margin-left:2px;"><i class="fas fa-trash-alt"></i></button>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+    <div style="text-align:center;padding:60px 20px;color:#aaa;">
+      <i class="fas fa-shopping-cart" style="font-size:2.5rem;margin-bottom:14px;display:block;opacity:.4;"></i>
+      <p style="margin-bottom:18px;font-size:.9rem;">Your cart is empty</p>
+      <a href="{% url 'full_menu' %}" onclick="closeCart()" class="btn-red" style="font-size:.82rem;padding:11px 22px;display:inline-flex;"><i class="fas fa-utensils"></i>Browse Menu</a>
+    </div>
+    {% endif %}
+  </div>
+  {% if cart_count > 0 %}
+  <div id="cartFooter" style="padding:18px 22px;border-top:1px solid #f0f0f0;flex-shrink:0;">
+    <div style="display:flex;justify-content:space-between;font-size:.85rem;color:#888;margin-bottom:6px;"><span>Subtotal</span><span>${{ cart.get_subtotal }}</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:.85rem;color:#888;margin-bottom:6px;"><span>Tax (8%)</span><span>${{ cart.get_tax }}</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:.85rem;color:#888;margin-bottom:14px;"><span>Delivery</span><span>{% if cart.get_delivery_fee == 0 %}<span style="color:#4ade80;font-weight:600;">FREE</span>{% else %}${{ cart.get_delivery_fee }}{% endif %}</span></div>
+    <div style="display:flex;justify-content:space-between;font-weight:700;font-size:1rem;padding-top:12px;border-top:1px solid #f0f0f0;margin-bottom:16px;"><span>Total</span><span style="color:var(--primary);">${{ cart.get_total }}</span></div>
+    <a href="{% url 'checkout' %}" onclick="closeCart()" class="btn-red w-100 justify-content-center d-flex mb-2"><i class="fas fa-lock"></i>Checkout</a>
+    <a href="{% url 'cart' %}" onclick="closeCart()" class="btn btn-outline-secondary w-100" style="border-radius:50px;padding:11px;font-size:.85rem;text-align:center;display:block;">View Cart</a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- TOAST -->
+<div id="sarabToasts" style="position:fixed;bottom:24px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:8px;"></div>
+
+{% block content %}{% endblock %}
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="row g-5">
+      <div class="col-lg-4">
+        <div class="fnm">Sar<span>ab</span></div>
+        <p class="fdesc">We bring the world's finest flavors together in a fast, friendly, and affordable experience. Every meal crafted with passion.</p>
+        <div class="fsoc">
+          <a href="#"><i class="fab fa-facebook-f"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+          <a href="#"><i class="fab fa-youtube"></i></a>
+          <a href="#"><i class="fab fa-tiktok"></i></a>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-2">
+        <div class="ftit">Quick Links</div>
+        <ul class="flinks ps-0">
+          <li><a href="{% url 'home' %}"><i class="fas fa-chevron-right"></i>Home</a></li>
+          <li><a href="{% url 'about' %}"><i class="fas fa-chevron-right"></i>About Us</a></li>
+          <li><a href="{% url 'full_menu' %}"><i class="fas fa-chevron-right"></i>Our Menu</a></li>
+          <li><a href="{% url 'make_reservation' %}"><i class="fas fa-chevron-right"></i>Reservation</a></li>
+          <li><a href="{% url 'blog_list' %}"><i class="fas fa-chevron-right"></i>Blog</a></li>
+          <li><a href="{% url 'contact' %}"><i class="fas fa-chevron-right"></i>Contact</a></li>
+        </ul>
+      </div>
+      <div class="col-sm-6 col-lg-2">
+        <div class="ftit">Legal</div>
+        <ul class="flinks ps-0">
+          <li><a href="{% url 'privacy_policy' %}"><i class="fas fa-chevron-right"></i>Privacy Policy</a></li>
+          <li><a href="{% url 'terms' %}"><i class="fas fa-chevron-right"></i>Terms &amp; Conditions</a></li>
+          <li><a href="{% url 'refund_policy' %}"><i class="fas fa-chevron-right"></i>Refund Policy</a></li>
+          <li><a href="{% url 'faq' %}"><i class="fas fa-chevron-right"></i>FAQ</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-4">
+        <div class="ftit">Get In Touch</div>
+        <div class="fci"><div class="fciico"><i class="fas fa-map-marker-alt"></i></div><div class="fciinfo"><strong>Address</strong>42 Flavor Street, Manhattan, NY 10001</div></div>
+        <div class="fci"><div class="fciico"><i class="fas fa-phone-alt"></i></div><div class="fciinfo"><strong>Phone</strong>+1 (800) 123-4567</div></div>
+        <div class="fci"><div class="fciico"><i class="fas fa-envelope"></i></div><div class="fciinfo"><strong>Email</strong>hello@sarabfood.com</div></div>
+        <div class="fci"><div class="fciico"><i class="fas fa-clock"></i></div><div class="fciinfo"><strong>Hours</strong>Wed - Sun: 9 AM - 11 PM</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="fbot">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <p>&copy; 2026 <span>Sarab Restaurant</span>. All Rights Reserved.</p>
+        <div>
+          <a href="{% url 'privacy_policy' %}">Privacy</a>
+          <a href="{% url 'terms' %}">Terms</a>
+          <a href="{% url 'faq' %}">FAQ</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})"><i class="fas fa-chevron-up"></i></button>
+
+<script src="{% static 'js/jquery-3.7.1.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/aos.js' %}"></script>
+<script src="{% static 'js/swiper-bundle.min.js' %}"></script>
+<script src="{% static 'js/jquery.magnific-popup.min.js' %}"></script>
+<script>
+/* ── GLOBALS ── */
+const CSRF  = '{{ csrf_token }}';
+const URL_CART_ADD    = '{% url "cart_add"    0 %}'.replace('/0/','/');
+const URL_CART_REMOVE = '{% url "cart_remove" 0 %}'.replace('/0/','/');
+const URL_CART_UPDATE = '{% url "cart_update" 0 %}'.replace('/0/','/');
+const URL_WISHLIST    = '{% url "toggle_wishlist" 0 %}'.replace('/0/','/');
+
+/* ── TOAST ── */
+function toast(msg, type='success') {
+  const c = document.getElementById('sarabToasts');
+  const t = document.createElement('div');
+  t.style.cssText = 'background:var(--dark);color:#fff;padding:13px 20px;border-radius:12px;font-size:.86rem;display:flex;align-items:center;gap:10px;box-shadow:0 8px 28px rgba(0,0,0,.25);animation:toastIn .3s ease;border-left:4px solid '+(type==='success'?'#4ade80':'var(--primary)')+';min-width:240px;max-width:340px;';
+  t.innerHTML = '<i class="fas fa-'+(type==='success'?'check-circle':'exclamation-circle')+'"></i>'+msg;
+  c.appendChild(t);
+  setTimeout(()=>t.remove(), 3600);
+}
+const style = document.createElement('style');
+style.textContent = '@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}';
+document.head.appendChild(style);
+
+/* ── CART SIDEBAR ── */
+function openCart() {
+  document.getElementById('cartSidebar').style.right = '0';
+  document.getElementById('cartOverlay').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+function closeCart() {
+  document.getElementById('cartSidebar').style.right = '-440px';
+  document.getElementById('cartOverlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+document.getElementById('cartBtn').addEventListener('click', openCart);
+
+function updateBadge(n) {
+  document.getElementById('cartBadge').textContent = n;
+  document.getElementById('sidebarCount').textContent = '('+n+')';
+}
+
+function apiPost(url, data) {
+  return fetch(url, {method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':CSRF}, body:JSON.stringify(data)}).then(r=>r.json());
+}
+
+function sidebarQty(id, delta) {
+  const qEl = document.getElementById('sq-'+id);
+  const curQty = parseInt(qEl.textContent);
+  const newQty = curQty + delta;
+  if (newQty <= 0) {
+    sidebarRemove(id);
+  } else {
+    apiPost(URL_CART_UPDATE+id+'/', {quantity:newQty}).then(d=>{
+      qEl.textContent = newQty;
+      updateBadge(d.cart_count);
+    });
+  }
+}
+
+function sidebarRemove(id) {
+  apiPost(URL_CART_REMOVE+id+'/', {}).then(d=>{
+    const row = document.getElementById('si-'+id);
+    if (row) row.remove();
+    updateBadge(d.cart_count);
+    toast('Item removed from cart');
+    if (d.cart_count === 0) location.reload();
+  });
+}
+
+/* ── ADD TO CART (global) ── */
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.add-to-cart-btn');
+  if (!btn) return;
+  e.preventDefault(); e.stopPropagation();
+  const id   = btn.dataset.id;
+  const qty  = parseInt(btn.dataset.qty || 1);
+  const orig = btn.innerHTML;
+  apiPost(URL_CART_ADD+id+'/', {quantity:qty}).then(d=>{
+    updateBadge(d.cart_count);
+    toast(d.message || 'Added to cart!');
+    btn.innerHTML = '<i class="fas fa-check"></i>';
+    btn.style.background = 'linear-gradient(135deg,#2d6a4f,#1a4a35)';
+    setTimeout(()=>{ btn.innerHTML=orig; btn.style.background=''; }, 1800);
+  });
+});
+
+/* ── WISHLIST (global) ── */
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.wishlist-btn');
+  if (!btn) return;
+  e.preventDefault(); e.stopPropagation();
+  {% if user.is_authenticated %}
+  const id = btn.dataset.id;
+  apiPost(URL_WISHLIST+id+'/', {}).then(d=>{
+    const ico = btn.querySelector('i');
+    if (d.added) {
+      ico.className = 'fas fa-heart';
+      ico.style.color = 'var(--primary)';
+      toast('Added to wishlist!');
+    } else {
+      ico.className = 'far fa-heart';
+      ico.style.color = '';
+      toast('Removed from wishlist');
+    }
+  });
+  {% else %}
+  window.location.href = '{% url "login" %}?next='+window.location.pathname;
+  {% endif %}
+});
+
+/* ── SEARCH OVERLAY ── */
+const searchOv = document.getElementById('searchOv');
+document.getElementById('navSearchBtn').addEventListener('click', ()=>{
+  searchOv.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(()=>document.getElementById('searchInput').focus(), 220);
+});
+document.getElementById('searchClose').addEventListener('click', ()=>{
+  searchOv.classList.remove('open');
+  document.body.style.overflow = '';
+});
+searchOv.addEventListener('click', e=>{ if(e.target===searchOv){ searchOv.classList.remove('open'); document.body.style.overflow=''; } });
+
+function fillSearch(el) {
+  document.getElementById('searchInput').value = el.textContent.trim();
+  document.getElementById('searchInput').focus();
+  document.getElementById('searchInput').dispatchEvent(new Event('input'));
+}
+function doSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (q) window.location.href = '{% url "full_menu" %}?q='+encodeURIComponent(q);
+}
+
+let searchTimer;
+document.getElementById('searchInput').addEventListener('input', function() {
+  clearTimeout(searchTimer);
+  const q = this.value.trim();
+  const resEl = document.getElementById('searchResults');
+  if (q.length < 2) { resEl.innerHTML=''; return; }
+  searchTimer = setTimeout(()=>{
+    fetch('{% url "menu_search" %}?q='+encodeURIComponent(q))
+      .then(r=>r.json()).then(data=>{
+        if (!data.results.length) { resEl.innerHTML='<p style="color:rgba(255,255,255,.45);font-size:.85rem;text-align:center;margin-top:14px;">No results found.</p>'; return; }
+        resEl.innerHTML = data.results.map(item=>`
+          <a href="/menu/${item.slug || item.id}/" onclick="document.getElementById('searchOv').classList.remove('open');document.body.style.overflow='';" 
+             style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-radius:10px;background:rgba(255,255,255,.07);margin-bottom:7px;text-decoration:none;transition:.2s;" 
+             onmouseenter="this.style.background='rgba(255,255,255,.12)'" onmouseleave="this.style.background='rgba(255,255,255,.07)'">
+            <div>
+              <span style="color:#fff;font-size:.88rem;font-weight:600;">${item.name}</span>
+              <span style="color:rgba(255,255,255,.45);font-size:.75rem;margin-left:8px;">${item.category__name}</span>
+            </div>
+            <span style="color:var(--secondary);font-weight:700;font-size:.9rem;">$${item.price}</span>
+          </a>`).join('');
+      });
+  }, 350);
+});
+document.getElementById('searchInput').addEventListener('keydown', e=>{ if(e.key==='Enter') doSearch(); });
+
+/* ── SCROLL ── */
+window.addEventListener('scroll', ()=>{
+  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 60);
+  document.getElementById('btt').classList.toggle('show', window.scrollY > 300);
+});
+
+/* ── ESC ── */
+document.addEventListener('keydown', e=>{
+  if (e.key==='Escape') {
+    searchOv.classList.remove('open');
+    closeCart();
+    document.body.style.overflow = '';
+    const mp = document.getElementById('menuPop');
+    const gp = document.getElementById('galPop');
+    if (mp) mp.classList.remove('open');
+    if (gp) gp.classList.remove('open');
+  }
+});
+
+/* ── AOS ── */
+AOS.init({duration:680, once:true, offset:55});
+
+/* ── Auto-dismiss messages ── */
+setTimeout(()=>document.querySelectorAll('.alert').forEach(a=>a.remove()), 4500);
+
+/* ── Payment method highlight ── */
+document.querySelectorAll('.payment-option input[type=radio]').forEach(radio=>{
+  radio.addEventListener('change', function(){
+    document.querySelectorAll('.payment-option').forEach(opt=>opt.classList.remove('selected'));
+    this.closest('.payment-option').classList.add('selected');
+  });
+});
+document.querySelectorAll('.payment-option input[type=radio]:checked').forEach(r=>{
+  r.closest('.payment-option').classList.add('selected');
+});
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

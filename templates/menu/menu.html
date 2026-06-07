@@ -1,0 +1,93 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block title %}Menu - Sarab Restaurant{% endblock %}
+{% block nav_menu %}active{% endblock %}
+{% block content %}
+<div class="page-banner">
+  <div class="container">
+    <span class="slbl">Fresh &amp; Delicious</span>
+    <h1 class="stitle">Our Full <span>Menu</span></h1>
+    <div class="sline" style="margin:12px auto;"></div>
+    <p class="sdesc">Filter by category or search for your favourite dish.</p>
+  </div>
+</div>
+
+<section style="padding:50px 0;background:var(--cream);">
+  <div class="container">
+
+    <!-- Search -->
+    <div class="row g-3 mb-4 align-items-center">
+      <div class="col-md-7">
+        <form method="GET" action="{% url 'full_menu' %}">
+          <div style="display:flex;background:#fff;border:1.5px solid #eee;border-radius:50px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.06);">
+            <input type="text" name="q" value="{{ search_query }}" placeholder="Search dishes, ingredients..." style="flex:1;border:none;outline:none;padding:13px 20px;font-size:.9rem;background:transparent;color:var(--dark);"/>
+            {% if active_category and active_category != 'all' %}<input type="hidden" name="category" value="{{ active_category }}"/>{% endif %}
+            <button type="submit" style="background:var(--primary);color:#fff;border:none;padding:13px 22px;cursor:pointer;font-size:.9rem;flex-shrink:0;"><i class="fas fa-search"></i></button>
+          </div>
+        </form>
+      </div>
+      <div class="col-md-5 text-md-end">
+        <span style="color:#aaa;font-size:.85rem;"><i class="fas fa-utensils me-1" style="color:var(--secondary);"></i><strong style="color:var(--dark);">{{ items.count }}</strong> items found</span>
+        {% if search_query %}<a href="{% url 'full_menu' %}" style="margin-left:12px;font-size:.82rem;color:var(--primary);">× Clear search</a>{% endif %}
+      </div>
+    </div>
+
+    <!-- Category Filters -->
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px;" data-aos="fade-up">
+      <a href="{% url 'full_menu' %}{% if search_query %}?q={{ search_query }}{% endif %}" class="filtbtn {% if active_category == 'all' or not active_category %}active{% endif %}">All</a>
+      {% for cat in categories %}
+      <a href="{% url 'full_menu' %}?category={{ cat.slug }}{% if search_query %}&q={{ search_query }}{% endif %}" class="filtbtn {% if active_category == cat.slug %}active{% endif %}">{{ cat.name }}</a>
+      {% endfor %}
+    </div>
+
+    <!-- Grid -->
+    <div class="row g-4" id="mgrid">
+      {% for item in items %}
+      <div class="col-sm-6 col-lg-4" data-aos="fade-up" data-aos-delay="{% cycle '0' '80' '160' %}">
+        <div class="mcard">
+          <div class="mimg">
+            <img src="{{ item.get_image_url }}" alt="{{ item.name }}" onerror="this.src='{% static 'img/menu/1.jpg' %}'"/>
+            {% if item.badge %}
+            <div class="mbdg {% if item.badge == 'new' %}new{% elif item.badge == 'hot' %}hot{% endif %}">
+              <i class="fas fa-star"></i> {{ item.get_badge_display }}
+            </div>
+            {% endif %}
+            <div class="mhrt wishlist-btn" data-id="{{ item.id }}" style="cursor:pointer;"><i class="far fa-heart"></i></div>
+          </div>
+          <div class="mbody">
+            <div class="mcat">{{ item.category.name }}</div>
+            <a href="{{ item.get_absolute_url }}" style="text-decoration:none;"><div class="mtit">{{ item.name }}</div></a>
+            <div class="mdesc">{{ item.short_description }}</div>
+            <div class="mfoot">
+              <div>
+                <div class="mprice">${{ item.price }}{% if item.old_price %} <small>${{ item.old_price }}</small>{% endif %}</div>
+                <div class="mstars"><i class="fas fa-star"></i> {{ item.average_rating }} <span style="color:#bbb;font-size:.7rem;">({{ item.review_count }})</span></div>
+              </div>
+              <button class="madd add-to-cart-btn" data-id="{{ item.id }}" data-name="{{ item.name }}" title="Add to Cart"><i class="fas fa-plus"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-12">
+        <div class="empty-box">
+          <i class="fas fa-search empty-box-icon"></i>
+          <h3>No items found</h3>
+          <p>{% if search_query %}No results for "{{ search_query }}".{% else %}No items in this category yet.{% endif %}</p>
+          <a href="{% url 'full_menu' %}" class="btn-red"><i class="fas fa-times-circle"></i>Clear Filters</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- CTA Banner -->
+<section style="background:var(--dark);padding:55px 0;text-align:center;">
+  <div class="container">
+    <h2 style="color:#fff;font-family:'Playfair Display',serif;margin-bottom:10px;">Can't Find What You're Looking For?</h2>
+    <p style="color:rgba(255,255,255,.6);margin-bottom:22px;font-size:.92rem;">Call us and we'll do our best to accommodate your cravings.</p>
+    <a href="tel:+18001234567" class="btn-red"><i class="fas fa-phone-alt"></i>Call +1 (800) 123-4567</a>
+  </div>
+</section>
+{% endblock %}
