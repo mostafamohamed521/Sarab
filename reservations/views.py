@@ -1,14 +1,22 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from .models import Reservation
 from .forms import ReservationForm
+from config.ratelimit import is_rate_limited, record_attempt
 import json
 
 
 def make_reservation(request):
     if request.method == 'POST':
+        if is_rate_limited(request, 'reservation', max_attempts=10, window_seconds=3600):
+            message = 'Too many reservation attempts. Please try again later.'
+            if request.content_type == 'application/json':
+                return JsonResponse({'status': 'error', 'message': message}, status=429)
+            messages.error(request, message)
+            return render(request, 'reservations/make_reservation.html', {'form': ReservationForm()})
+        record_attempt(request, 'reservation', window_seconds=3600)
         try:
             if request.content_type == 'application/json':
                 data = json.loads(request.body)
@@ -41,7 +49,20 @@ def make_reservation(request):
 
 
 def reservation_confirmation(request, code):
+    """
+    A guest reservation (no account) has no owner to check against —
+    the confirmation code itself is the credential, same as most
+    restaurant booking systems, and that's intentional.
+
+    But once a reservation is attached to a logged-in account, it
+    carries that customer's name/email/phone, so it must not be
+    viewable by a different account just from knowing/guessing the
+    code (IDOR).
+    """
     reservation = get_object_or_404(Reservation, confirmation_code=code)
+    if reservation.user_id is not None:
+        if not request.user.is_authenticated or request.user.pk != reservation.user_id:
+            return HttpResponseForbidden("You do not have permission to view this reservation.")
     return render(request, 'reservations/confirmation.html', {'reservation': reservation})
 
 
