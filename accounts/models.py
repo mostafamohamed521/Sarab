@@ -1,5 +1,15 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
+
+
+def validate_avatar_size(file):
+    # Customer-facing upload, unlike menu/category images which are
+    # only ever set by staff through Django admin — cap it so a user
+    # can't fill disk with oversized uploads (no limit existed before).
+    max_bytes = 5 * 1024 * 1024
+    if file.size > max_bytes:
+        raise ValidationError('Image file too large ( max 5MB ).')
 
 
 class CustomUser(AbstractUser):
@@ -14,7 +24,7 @@ class CustomUser(AbstractUser):
 
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=20, blank=True)
-    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True, validators=[validate_avatar_size])
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=ROLE_CUSTOMER)
     email_verified = models.BooleanField(default=False)
     date_of_birth = models.DateField(null=True, blank=True)
@@ -69,6 +79,16 @@ class Address(models.Model):
     class Meta:
         verbose_name_plural = 'Addresses'
         ordering = ['-is_default', '-created_at']
+
+    def save(self, *args, **kwargs):
+        # Enforced here (not just in the views) so every path that can
+        # create/update an address — admin, API, future code — gets
+        # the same "only one default per user" guarantee, matching
+        # what tests.py's test_only_one_default already expects of
+        # Address.objects.create() directly.
+        super().save(*args, **kwargs)
+        if self.is_default:
+            Address.objects.filter(user=self.user, is_default=True).exclude(pk=self.pk).update(is_default=False)
 
     def __str__(self):
         return f"{self.label} - {self.street_address}, {self.city}"
