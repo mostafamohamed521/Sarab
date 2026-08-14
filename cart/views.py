@@ -1,10 +1,22 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
 from menu.models import MenuItem
 from .cart import Cart
 import json
+
+MAX_ITEM_QUANTITY = 50
+
+
+def _parse_quantity(data, request):
+    raw = data.get('quantity', request.POST.get('quantity', 1))
+    try:
+        quantity = int(raw)
+    except (TypeError, ValueError):
+        return None
+    if quantity > MAX_ITEM_QUANTITY:
+        quantity = MAX_ITEM_QUANTITY
+    return quantity
 
 
 def cart_detail(request):
@@ -20,7 +32,9 @@ def cart_add(request, item_id):
         data = json.loads(request.body) if request.content_type == 'application/json' else {}
     except Exception:
         data = {}
-    quantity = int(data.get('quantity', request.POST.get('quantity', 1)))
+    quantity = _parse_quantity(data, request)
+    if quantity is None:
+        return JsonResponse({'status': 'error', 'message': 'Quantity must be a number.'}, status=400)
     cart.add(item, quantity=quantity)
     return JsonResponse({
         'status': 'ok',
@@ -49,7 +63,9 @@ def cart_update(request, item_id):
         data = json.loads(request.body) if request.content_type == 'application/json' else {}
     except Exception:
         data = {}
-    quantity = int(data.get('quantity', request.POST.get('quantity', 1)))
+    quantity = _parse_quantity(data, request)
+    if quantity is None:
+        return JsonResponse({'status': 'error', 'message': 'Quantity must be a number.'}, status=400)
     if quantity <= 0:
         cart.remove_by_id(item_id)
     else:
