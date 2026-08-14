@@ -557,13 +557,35 @@ class OrderViewTest(TestCase):
 
     def test_order_success_page(self):
         order = make_order(user=self.user)
+        self.client.login(username='test@sarab.com', password='testpass123')
         response = self.client.get(reverse('order_success', args=[order.order_number]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, order.order_number)
 
     def test_order_tracking_page(self):
         order = make_order(user=self.user)
+        self.client.login(username='test@sarab.com', password='testpass123')
         response = self.client.get(reverse('order_tracking', args=[order.order_number]))
+        self.assertEqual(response.status_code, 200)
+
+    def test_order_success_page_blocks_other_users(self):
+        """Regression test: another logged-in user must not be able to
+        view this order just by knowing its order_number (IDOR)."""
+        order = make_order(user=self.user)
+        other = make_user(email='other@sarab.com', username='other')
+        self.client.login(username='other@sarab.com', password='testpass123')
+        response = self.client.get(reverse('order_success', args=[order.order_number]))
+        self.assertEqual(response.status_code, 403)
+
+    def test_order_success_page_allows_guest_who_just_ordered(self):
+        """A guest checkout should still be able to see their own
+        confirmation page right after placing the order (tracked via
+        session['last_order_id']), without needing an account."""
+        order = make_order(user=None)
+        session = self.client.session
+        session['last_order_id'] = order.id
+        session.save()
+        response = self.client.get(reverse('order_success', args=[order.order_number]))
         self.assertEqual(response.status_code, 200)
 
     def test_apply_coupon_valid(self):
@@ -638,6 +660,19 @@ class ReservationViewTest(TestCase):
         response = self.client.get(reverse('reservation_confirmation', args=[res.confirmation_code]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, res.confirmation_code)
+
+    def test_reservation_confirmation_page_blocks_other_users(self):
+        """Regression test: a reservation attached to an account must not
+        be viewable by a different account via the confirmation code
+        (guest reservations with no account are unaffected)."""
+        res = Reservation.objects.create(
+            user=self.user, full_name='Test', email='t@t.com', phone='555',
+            date=date.today() + timedelta(days=1), time='19:00', guests=2
+        )
+        make_user(email='other3@sarab.com', username='other3')
+        self.client.login(username='other3@sarab.com', password='testpass123')
+        response = self.client.get(reverse('reservation_confirmation', args=[res.confirmation_code]))
+        self.assertEqual(response.status_code, 403)
 
 
 class CMSViewTest(TestCase):
@@ -745,6 +780,7 @@ class WishlistViewTest(TestCase):
 class PaymentViewTest(TestCase):
     def setUp(self):
         self.user = make_user()
+        self.client.login(username='test@sarab.com', password='testpass123')
 
     def test_payment_success_page(self):
         order = make_order(user=self.user)
@@ -763,6 +799,17 @@ class PaymentViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, order.order_number)
         self.assertContains(response, 'INVOICE')
+
+    def test_invoice_page_blocks_other_users(self):
+        """Regression test: an unrelated logged-in user must not be able
+        to view someone else's invoice by guessing/knowing the order
+        number (IDOR)."""
+        order = make_order(user=self.user)
+        make_user(email='other2@sarab.com', username='other2')
+        self.client.logout()
+        self.client.login(username='other2@sarab.com', password='testpass123')
+        response = self.client.get(reverse('invoice', args=[order.order_number]))
+        self.assertEqual(response.status_code, 403)
 
 
 # ─── API Tests ───────────────────────────────────────────────────────────────
