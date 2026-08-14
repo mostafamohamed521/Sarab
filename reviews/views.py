@@ -1,8 +1,8 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.db.models import Avg, Count
 from .models import Review, Wishlist
 from menu.models import MenuItem
 import json
@@ -16,7 +16,12 @@ def add_review(request, item_id):
         data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
     except Exception:
         data = request.POST
-    rating = int(data.get('rating', 5))
+    try:
+        rating = int(data.get('rating', 5))
+    except (TypeError, ValueError):
+        return JsonResponse({'status': 'error', 'message': 'Rating must be a number.'}, status=400)
+    if rating < 1 or rating > 5:
+        return JsonResponse({'status': 'error', 'message': 'Rating must be between 1 and 5.'}, status=400)
     comment = data.get('comment', '').strip()
     if not comment:
         return JsonResponse({'status': 'error', 'message': 'Comment is required.'}, status=400)
@@ -30,7 +35,10 @@ def add_review(request, item_id):
 @login_required
 def wishlist_view(request):
     wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
-    return render(request, 'reviews/wishlist.html', {'wishlist': wishlist})
+    items = wishlist.items.select_related('category').prefetch_related('tags').annotate(
+        _avg_rating=Avg('reviews__rating'), _review_count=Count('reviews', distinct=True)
+    )
+    return render(request, 'reviews/wishlist.html', {'wishlist': wishlist, 'wishlist_items': items})
 
 
 @login_required
