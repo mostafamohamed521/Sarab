@@ -1,12 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
-from .models import CustomUser, Address, NewsletterSubscriber
+from .models import Address, NewsletterSubscriber
 from .forms import RegisterForm, LoginForm, ProfileForm, AddressForm, CustomPasswordResetForm, CustomSetPasswordForm
+from config.ratelimit import is_rate_limited, record_attempt
 import json
 
 
@@ -14,6 +15,10 @@ def register_view(request):
     if request.user.is_authenticated:
         return redirect('home')
     if request.method == 'POST':
+        if is_rate_limited(request, 'register', max_attempts=10, window_seconds=3600):
+            messages.error(request, 'Too many signup attempts. Please try again later.')
+            return render(request, 'accounts/register.html', {'form': RegisterForm()})
+        record_attempt(request, 'register', window_seconds=3600)
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
@@ -33,6 +38,13 @@ def login_view(request):
     if request.user.is_authenticated:
         return redirect('home')
     if request.method == 'POST':
+        # 10 attempts / 5 minutes per IP — generous enough not to lock
+        # out someone who mistypes their password a couple of times,
+        # tight enough to blunt a brute-force script. No such limit
+        # existed before.
+        if is_rate_limited(request, 'login', max_attempts=10, window_seconds=300):
+            messages.error(request, 'Too many login attempts. Please wait a few minutes and try again.')
+            return render(request, 'accounts/login.html', {'form': LoginForm()})
         form = LoginForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
@@ -41,6 +53,7 @@ def login_view(request):
             messages.success(request, f'Welcome back, {user.first_name or user.email}!')
             return redirect(next_url)
         else:
+            record_attempt(request, 'login', window_seconds=300)
             messages.error(request, 'Invalid email or password.')
     else:
         form = LoginForm()
@@ -65,7 +78,7 @@ def profile_view(request):
             messages.error(request, 'Please correct the errors below.')
     else:
         form = ProfileForm(instance=request.user)
-    orders = request.user.order_set.all()[:5] if hasattr(request.user, 'order_set') else []
+    orders = request.user.order_set.all()[:5]
     return render(request, 'accounts/profile.html', {'form': form, 'orders': orders})
 
 
@@ -115,6 +128,9 @@ def delete_address_view(request, pk):
 
 @require_POST
 def newsletter_subscribe(request):
+    if is_rate_limited(request, 'newsletter', max_attempts=10, window_seconds=3600):
+        return JsonResponse({'status': 'error', 'message': 'Too many attempts. Please try again later.'}, status=429)
+    record_attempt(request, 'newsletter', window_seconds=3600)
     data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
     email = data.get('email', '').strip()
     if email and '@' in email:
@@ -130,6 +146,17 @@ class SarabPasswordResetView(PasswordResetView):
     template_name = 'accounts/password_reset.html'
     email_template_name = 'accounts/password_reset_email.html'
     success_url = '/accounts/password-reset/done/'
+
+    def post(self, request, *args, **kwargs):
+        # Guards against using this form to spam an inbox with reset
+        # emails, or to enumerate which emails have accounts (timing/
+        # side-channel aside, the response is already identical either
+        # way — this just stops volume abuse).
+        if is_rate_limited(request, 'password_reset', max_attempts=5, window_seconds=3600):
+            messages.error(request, 'Too many reset requests. Please try again later.')
+            return redirect('password_reset')
+        record_attempt(request, 'password_reset', window_seconds=3600)
+        return super().post(request, *args, **kwargs)
 
 
 class SarabPasswordResetConfirmView(PasswordResetConfirmView):
