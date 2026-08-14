@@ -1,12 +1,15 @@
+from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.utils import timezone
+from django.db import transaction
 from datetime import timedelta
 from cart.cart import Cart
 from .models import Order, OrderItem, OrderStatusUpdate, Coupon
-from accounts.models import Address
+from .access import get_order_or_403
+from config.ratelimit import is_rate_limited, record_attempt
 import json
 
 
@@ -23,7 +26,7 @@ def checkout_view(request):
     context = {
         'cart': cart,
         'addresses': addresses,
-        'stripe_key': 'pk_test_your_key_here',
+        'stripe_key': settings.STRIPE_PUBLISHABLE_KEY,
     }
     return render(request, 'orders/checkout.html', context)
 
@@ -36,62 +39,71 @@ def place_order(request):
     if cart.is_empty():
         return redirect('cart')
 
+    if is_rate_limited(request, 'place_order', max_attempts=20, window_seconds=3600):
+        messages.error(request, 'Too many orders placed recently. Please try again later.')
+        return redirect('checkout')
+    record_attempt(request, 'place_order', window_seconds=3600)
+
     try:
         data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
     except Exception:
         data = request.POST
 
-    # Coupon check
-    coupon = None
     coupon_code = data.get('coupon_code', '').strip().upper()
-    discount = 0
-    if coupon_code:
-        try:
-            coupon = Coupon.objects.get(
-                code=coupon_code,
-                is_active=True,
-                valid_from__lte=timezone.now(),
-                valid_until__gte=timezone.now(),
-            )
-            discount = coupon.calculate_discount(cart.get_subtotal())
-        except Coupon.DoesNotExist:
-            pass
 
-    order = Order.objects.create(
-        user=request.user if request.user.is_authenticated else None,
-        full_name=data.get('full_name', ''),
-        email=data.get('email', ''),
-        phone=data.get('phone', ''),
-        street_address=data.get('street_address', ''),
-        city=data.get('city', ''),
-        state=data.get('state', ''),
-        zip_code=data.get('zip_code', ''),
-        country=data.get('country', 'United States'),
-        subtotal=cart.get_subtotal(),
-        tax=cart.get_tax(),
-        delivery_fee=cart.get_delivery_fee(),
-        discount=discount,
-        total=cart.get_total() - discount,
-        payment_method=data.get('payment_method', 'cash'),
-        notes=data.get('notes', ''),
-        coupon=coupon,
-        estimated_delivery=timezone.now() + timedelta(minutes=30),
-    )
+    # Row-locked so two simultaneous checkouts can't both pass the
+    # max_uses check before either commits (a coupon capped at N uses
+    # could otherwise be redeemed N+1+ times by concurrent requests).
+    # select_for_update() is a no-op hint on SQLite but takes effect on
+    # Postgres/MySQL in a real deployment, which is what this guards.
+    with transaction.atomic():
+        coupon = None
+        discount = 0
+        if coupon_code:
+            try:
+                candidate = Coupon.objects.select_for_update().get(code=coupon_code)
+                valid, _reason = candidate.is_valid_for(cart.get_subtotal())
+                if valid:
+                    coupon = candidate
+                    discount = coupon.calculate_discount(cart.get_subtotal())
+            except Coupon.DoesNotExist:
+                pass
 
-    for cart_item in cart:
-        OrderItem.objects.create(
-            order=order,
-            menu_item=cart_item.get('item'),
-            name=cart_item['name'],
-            price=cart_item['price'],
-            quantity=cart_item['quantity'],
+        order = Order.objects.create(
+            user=request.user if request.user.is_authenticated else None,
+            full_name=data.get('full_name', ''),
+            email=data.get('email', ''),
+            phone=data.get('phone', ''),
+            street_address=data.get('street_address', ''),
+            city=data.get('city', ''),
+            state=data.get('state', ''),
+            zip_code=data.get('zip_code', ''),
+            country=data.get('country', 'United States'),
+            subtotal=cart.get_subtotal(),
+            tax=cart.get_tax(),
+            delivery_fee=cart.get_delivery_fee(),
+            discount=discount,
+            total=cart.get_total() - discount,
+            payment_method=data.get('payment_method', 'cash'),
+            notes=data.get('notes', ''),
+            coupon=coupon,
+            estimated_delivery=timezone.now() + timedelta(minutes=30),
         )
 
-    OrderStatusUpdate.objects.create(order=order, status=Order.STATUS_PENDING, note='Order placed successfully.')
+        for cart_item in cart:
+            OrderItem.objects.create(
+                order=order,
+                menu_item=cart_item.get('item'),
+                name=cart_item['name'],
+                price=cart_item['price'],
+                quantity=cart_item['quantity'],
+            )
 
-    if coupon:
-        coupon.times_used += 1
-        coupon.save()
+        OrderStatusUpdate.objects.create(order=order, status=Order.STATUS_PENDING, note='Order placed successfully.')
+
+        if coupon:
+            coupon.times_used += 1
+            coupon.save()
 
     cart.clear()
     request.session['last_order_id'] = order.id
@@ -107,11 +119,15 @@ def place_order(request):
 
 def order_success(request, order_number):
     order = get_object_or_404(Order, order_number=order_number)
+    if not get_order_or_403(request, order):
+        return HttpResponseForbidden("You do not have permission to view this order.")
     return render(request, 'orders/order_success.html', {'order': order})
 
 
 def order_tracking(request, order_number):
     order = get_object_or_404(Order, order_number=order_number)
+    if not get_order_or_403(request, order):
+        return HttpResponseForbidden("You do not have permission to view this order.")
     status_updates = order.status_updates.all()
     statuses = [
         Order.STATUS_PENDING,
@@ -131,7 +147,7 @@ def order_tracking(request, order_number):
 
 @login_required
 def order_history(request):
-    orders = Order.objects.filter(user=request.user)
+    orders = Order.objects.filter(user=request.user).prefetch_related('items')
     return render(request, 'orders/history.html', {'orders': orders})
 
 
@@ -163,12 +179,10 @@ def apply_coupon(request):
         except Exception:
             code = request.POST.get('code', '').strip().upper()
         try:
-            coupon = Coupon.objects.get(
-                code=code,
-                is_active=True,
-                valid_from__lte=timezone.now(),
-                valid_until__gte=timezone.now(),
-            )
+            coupon = Coupon.objects.get(code=code)
+            valid, reason = coupon.is_valid_for(cart.get_subtotal())
+            if not valid:
+                return JsonResponse({'status': 'error', 'message': reason})
             discount = coupon.calculate_discount(cart.get_subtotal())
             return JsonResponse({
                 'status': 'ok',
