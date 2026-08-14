@@ -2,9 +2,18 @@ import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = 'django-insecure-sarab-food-restaurant-2026-change-in-production'
-DEBUG = True
-ALLOWED_HOSTS = ['*']
+
+# All secrets/environment-specific values below fall back to their
+# previous hardcoded dev values, so local `runserver` behavior is
+# unchanged. For any real deployment, set these as actual environment
+# variables (see .env.example) — a checked-in SECRET_KEY and DEBUG=True
+# are unsafe in production.
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-sarab-food-restaurant-2026-change-in-production',
+)
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',') if h.strip()]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -97,9 +106,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'noreply@sarabfood.com'
 
 # Stripe
-STRIPE_PUBLISHABLE_KEY = 'pk_test_your_key_here'
-STRIPE_SECRET_KEY = 'sk_test_your_key_here'
-STRIPE_WEBHOOK_SECRET = 'whsec_your_webhook_secret'
+STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', 'pk_test_your_key_here')
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', 'sk_test_your_key_here')
+STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', 'whsec_your_webhook_secret')
 
 # Cart session key
 CART_SESSION_ID = 'cart'
@@ -115,4 +124,26 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 12,
+    # No throttling existed at all before — every /api/v1/ endpoint was
+    # unlimited. These are deliberately generous so normal browsing/use
+    # is unaffected; they exist to blunt scripted abuse, not to be a
+    # real rate-limiting product.
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/minute',
+        'user': '300/minute',
+    },
 }
+
+# Standard hardening for real deployments. Left inert (False/0) while
+# DEBUG=True so local development is unaffected.
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SECURE_SSL_REDIRECT', 'True') == 'True'
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 7  # 1 week; raise once confirmed working
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
