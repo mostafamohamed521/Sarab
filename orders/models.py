@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 from decimal import Decimal
 import uuid
 
@@ -22,6 +23,23 @@ class Coupon(models.Model):
         if self.discount_type == 'percent':
             return (amount * self.discount_value / 100).quantize(Decimal('0.01'))
         return min(self.discount_value, amount)
+
+    def is_valid_for(self, amount):
+        """Checks the rules that calculate_discount alone doesn't
+        enforce: minimum order amount and the usage cap. Both fields
+        already existed on the model but were never actually checked
+        anywhere, so a single-use or `min_order_amount` coupon could be
+        applied to any order any number of times."""
+        now = timezone.now()
+        if not self.is_active:
+            return False, 'This coupon is no longer active.'
+        if not (self.valid_from <= now <= self.valid_until):
+            return False, 'This coupon has expired.'
+        if self.max_uses is not None and self.times_used >= self.max_uses:
+            return False, 'This coupon has reached its usage limit.'
+        if amount < self.min_order_amount:
+            return False, f'This coupon requires a minimum order of ${self.min_order_amount}.'
+        return True, ''
 
 
 class Order(models.Model):
