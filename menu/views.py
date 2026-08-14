@@ -1,15 +1,21 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
-from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Q, Avg, Count
 from .models import Category, MenuItem, ContactMessage
+from config.ratelimit import is_rate_limited, record_attempt
 import json
 
 
 def home(request):
-    categories = Category.objects.filter(is_active=True)
-    featured_items = MenuItem.objects.filter(is_available=True, is_featured=True)[:6]
-    menu_items = MenuItem.objects.filter(is_available=True).select_related('category')[:12]
+    categories = Category.objects.filter(is_active=True).annotate(
+        _item_count=Count('items', filter=Q(items__is_available=True), distinct=True)
+    )
+    featured_items = _with_rating_annotations(
+        MenuItem.objects.filter(is_available=True, is_featured=True)
+    )[:6]
+    menu_items = _with_rating_annotations(
+        MenuItem.objects.filter(is_available=True).select_related('category')
+    )[:12]
     return render(request, 'menu/home.html', {
         'categories': categories,
         'menu_items': menu_items,
@@ -17,11 +23,24 @@ def home(request):
     })
 
 
+def _with_rating_annotations(queryset):
+    """Precompute average_rating/review_count for a list of items in one
+    query instead of two extra queries per item (see MenuItem properties
+    in menu/models.py)."""
+    return queryset.annotate(
+        _avg_rating=Avg('reviews__rating'), _review_count=Count('reviews', distinct=True)
+    ).prefetch_related('tags')
+
+
 def full_menu(request):
-    categories = Category.objects.filter(is_active=True)
+    categories = Category.objects.filter(is_active=True).annotate(
+        _item_count=Count('items', filter=Q(items__is_available=True), distinct=True)
+    )
     category_slug = request.GET.get('category', 'all')
     search_query = request.GET.get('q', '').strip()
-    items = MenuItem.objects.filter(is_available=True).select_related('category')
+    items = _with_rating_annotations(
+        MenuItem.objects.filter(is_available=True).select_related('category')
+    )
 
     if category_slug and category_slug != 'all':
         items = items.filter(category__slug=category_slug)
@@ -42,7 +61,7 @@ def full_menu(request):
 
 def menu_item_detail(request, slug):
     item = get_object_or_404(MenuItem, slug=slug, is_available=True)
-    reviews = item.reviews.filter(is_approved=True).order_by('-created_at')
+    reviews = item.reviews.filter(is_approved=True).select_related('user').order_by('-created_at')
     related_items = MenuItem.objects.filter(
         category=item.category, is_available=True
     ).exclude(pk=item.pk)[:4]
@@ -76,24 +95,31 @@ def menu_search(request):
 
 def contact_submit(request):
     if request.method == 'POST':
+        if is_rate_limited(request, 'contact', max_attempts=10, window_seconds=3600):
+            return JsonResponse({'status': 'error', 'message': 'Too many messages sent. Please try again later.'}, status=429)
+        record_attempt(request, 'contact', window_seconds=3600)
         try:
             if request.content_type == 'application/json':
                 data = json.loads(request.body)
             else:
                 data = request.POST
-            name = data.get('name', '').strip()
-            email = data.get('email', '').strip()
-            message = data.get('message', '').strip()
-            if not name or not email or not message:
-                return JsonResponse({'status': 'error', 'message': 'Please fill all required fields.'}, status=400)
-            ContactMessage.objects.create(
-                name=name,
-                email=email,
-                phone=data.get('phone', ''),
-                subject=data.get('subject', 'General Inquiry'),
-                message=message,
-            )
-            return JsonResponse({'status': 'ok', 'message': "Message sent! We'll reply within 2 hours."})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+        except (ValueError, TypeError):
+            return JsonResponse({'status': 'error', 'message': 'Invalid request format.'}, status=400)
+
+        name = data.get('name', '').strip()
+        email = data.get('email', '').strip()
+        message = data.get('message', '').strip()
+        if not name or not email or not message:
+            return JsonResponse({'status': 'error', 'message': 'Please fill all required fields.'}, status=400)
+        if '@' not in email:
+            return JsonResponse({'status': 'error', 'message': 'Please enter a valid email.'}, status=400)
+
+        ContactMessage.objects.create(
+            name=name[:100],
+            email=email[:254],
+            phone=data.get('phone', '')[:20],
+            subject=data.get('subject', 'General Inquiry')[:200],
+            message=message,
+        )
+        return JsonResponse({'status': 'ok', 'message': "Message sent! We'll reply within 2 hours."})
     return JsonResponse({'status': 'error', 'message': 'Method not allowed.'}, status=405)
