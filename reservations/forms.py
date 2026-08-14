@@ -29,3 +29,12 @@ class ReservationForm(forms.ModelForm):
             'occasion': forms.Select(attrs={'class': 'fctrl'}),
             'special_requests': forms.Textarea(attrs={'class': 'fctrl', 'rows': 3}),
         }
+
+    def clean_date(self):
+        # The HTML `min` attribute above is client-side only — a direct
+        # POST (or a modified request) could otherwise book a date in
+        # the past.
+        value = self.cleaned_data['date']
+        if value < date.today():
+            raise forms.ValidationError('Reservation date cannot be in the past.')
+        return value
