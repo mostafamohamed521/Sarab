@@ -101,17 +101,9 @@ document.querySelectorAll('.sovtrend .ttag').forEach(function(t) {
 });
 
 
-$(document).ready(function() {
-	$('.magnific_popup').magnificPopup({
-	  disableOn: 700,
-	  type: 'iframe',
-	  mainClass: 'mfp-fade',
-	  removalDelay: 160,
-	  preloader: false,
-	  fixedContentPos: false,
-	  disableOn: 300
-	});	
-});
+// NOTE: Magnific Popup init removed from here — it's also initialized
+// inline in home.html with the same selector, which was double-firing
+// the lightbox plugin on the same elements.
 
 
 function filterMenu(cat) {
@@ -259,191 +251,59 @@ document.getElementById('mpMinus').addEventListener('click', function() {
 });
 
 // Add to cart button
-document.getElementById('mpAddCart').addEventListener('click', function() {
-    var cnt = parseInt(document.getElementById('cartCount').textContent) + mpQty;
-    document.getElementById('cartCount').textContent = cnt;
-    this.innerHTML = '<i class="fas fa-check"></i> Added to Cart!';
-    this.style.background = 'linear-gradient(135deg,var(--green),#1a4a35)';
-    var self = this;
-    setTimeout(function() {
-        closeMenuPop();
-        self.innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart';
-        self.style.background = '';
-    }, 1000);
-});
+// NOTE: superseded by the real, backend-wired handler in home.html's
+// inline <script> (calls the actual /cart/add/ API). This block used
+// to duplicate-register a second, fake listener on the same button
+// that only faked success locally and referenced a #cartCount element
+// that doesn't exist on the page — throwing on every click. Removed
+// rather than left in, since two listeners on the same button (one
+// broken) is worse than one correct one.
 
 
-document.getElementById('resBtn').addEventListener('click', function() {
-    var btn = this;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Booking...';
-    btn.disabled = true;
-    setTimeout(function() {
-        btn.innerHTML = '<i class="fas fa-calendar-check"></i> Confirm Reservation';
-        btn.disabled = false;
-        var ok = document.getElementById('resOk');
-        ok.style.display = 'block';
-        ok.scrollIntoView({
-            behavior: 'smooth',
-            block: 'nearest'
-        });
-    }, 1500);
-});
+// NOTE: the original demo template had a static, fake-simulated
+// "Confirm Reservation" button (#resBtn) here that didn't submit
+// anywhere. It's been replaced by a real form (#homeResForm) that
+// POSTs to the actual reservations backend — see the inline <script>
+// in home.html. The old code referenced an element that no longer
+// exists, which threw on page load and silently killed every line of
+// JS below it in this file (Swiper, the countdown timer, the
+// newsletter button, and the stats counter never ran as a result).
+// Removed rather than left as dead weight that could crash again.
 
 
-document.getElementById('ctcBtn').addEventListener('click', function() {
-    var btn = this;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-    btn.disabled = true;
-    setTimeout(function() {
-        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
-        btn.disabled = false;
-        var ok = document.getElementById('ctcOk');
-        ok.style.display = 'block';
-        ok.scrollIntoView({
-            behavior: 'smooth',
-            block: 'nearest'
-        });
-    }, 1500);
-});
+// NOTE: same as the reservation button above — this was a fake,
+// locally-simulated "Send Message" handler. home.html now has a real
+// #ctcBtn handler (inline <script>) that actually POSTs to
+// contact_submit. Left in place, this would've registered as a
+// second listener on the same button, firing alongside the real one
+// on every click.
 
 
+// NOTE: gallery popup (galData/openGal/gpClose/gpPrev/gpNext), the
+// testimonials Swiper, the countdown timer, and the newsletter button
+// are all fully reimplemented in home.html's inline <script> (with
+// working backend calls, in the newsletter case). Keeping both copies
+// meant every gallery click advanced two independent indexes at once,
+// two Swiper instances fought over the same slider, two countdown
+// intervals wrote the same DOM nodes every second, and the newsletter
+// button had one real handler and one fake one that never called the
+// actual subscribe endpoint. Removed here rather than duplicated.
 var galPop = document.getElementById('galPop');
-var galData = [];
-var galIdx = 0;
-
-document.querySelectorAll('.gitem').forEach(function(item) {
-    galData.push({
-        img: item.getAttribute('data-gimg'),
-        title: item.getAttribute('data-gtitle'),
-        desc: item.getAttribute('data-gdesc')
-    });
-    item.addEventListener('click', function() {
-        openGal(parseInt(this.getAttribute('data-gi')));
-    });
-});
-
-function openGal(i) {
-    galIdx = i;
-    var g = galData[i];
-    document.getElementById('gpImg').setAttribute('src', g.img);
-    document.getElementById('gpTitle').textContent = g.title;
-    document.getElementById('gpDesc').innerHTML = g.desc;
-    galPop.classList.add('open');
-    document.body.style.overflow = 'hidden';
-}
-
-document.getElementById('gpClose').addEventListener('click', closeGal);
-galPop.addEventListener('click', function(e) {
-    if (e.target === this) closeGal();
-});
-
-function closeGal() {
-    galPop.classList.remove('open');
-    document.body.style.overflow = '';
-}
-
-document.getElementById('gpPrev').addEventListener('click', function() {
-    openGal((galIdx - 1 + galData.length) % galData.length);
-});
-document.getElementById('gpNext').addEventListener('click', function() {
-    openGal((galIdx + 1) % galData.length);
-});
 
 /*  ESC key closes everything */
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeSearch();
         closeMenuPop();
-        closeGal();
+        if (galPop) {
+            galPop.classList.remove('open');
+        }
         if (typeof $.magnificPopup !== 'undefined') $.magnificPopup.close();
     }
 });
 
-
-new Swiper('.tesSwiper', {
-    slidesPerView: 1,
-    spaceBetween: 22,
-    loop: true,
-    autoplay: {
-        delay: 4000,
-        disableOnInteraction: false
-    },
-    pagination: {
-        el: '.swiper-pagination',
-        clickable: true
-    },
-    breakpoints: {
-        640: {
-            slidesPerView: 2
-        },
-        1024: {
-            slidesPerView: 3
-        }
-    }
-});
-
-
-var cH = 8,
-    cM = 45,
-    cS = 30;
-setInterval(function() {
-    cS--;
-    if (cS < 0) {
-        cS = 59;
-        cM--;
-    }
-    if (cM < 0) {
-        cM = 59;
-        cH--;
-    }
-    if (cH < 0) {
-        cH = 8;
-        cM = 45;
-        cS = 30;
-    }
-    document.getElementById('cdH').textContent = String(cH).padStart(2, '0');
-    document.getElementById('cdM').textContent = String(cM).padStart(2, '0');
-    document.getElementById('cdS').textContent = String(cS).padStart(2, '0');
-}, 1000);
-
-/* â”€â”€ NEWSLETTER â”€â”€ */
-document.getElementById('nlBtn').addEventListener('click', function() {
-    var email = document.getElementById('nlEmail').value;
-    if (email && email.includes('@')) {
-        var btn = this;
-        btn.textContent = 'âœ“ Subscribed!';
-        btn.style.background = '#4ade80';
-        btn.style.color = '#222';
-        document.getElementById('nlEmail').value = '';
-        setTimeout(function() {
-            btn.textContent = 'Subscribe';
-            btn.style.background = '';
-            btn.style.color = '';
-        }, 3000);
-    }
-});
-
-/*  NUMBER COUNTER ANIMATION*/
-var numAnimated = false;
-window.addEventListener('scroll', function() {
-    var hero = document.getElementById('hero');
-    if (!numAnimated && hero && window.scrollY > hero.offsetHeight - 300) {
-        numAnimated = true;
-        document.querySelectorAll('.snum').forEach(function(el) {
-            var txt = el.textContent;
-            var num = parseInt(txt);
-            var suf = txt.replace(/[0-9]/g, '');
-            if (isNaN(num)) return;
-            var start = 0;
-            var step = Math.ceil(num / 55);
-            var iv = setInterval(function() {
-                start += step;
-                if (start >= num) {
-                    start = num;
-                    clearInterval(iv);
-                }
-                el.textContent = start + suf;
-            }, 1400 / 55);
-        });
-    }
-});
+// NOTE: the number-counter (.snum) scroll animation is also
+// reimplemented in home.html's inline <script> — removed the
+// duplicate here for the same reason as the gallery/Swiper/countdown/
+// newsletter blocks above (two competing setInterval loops writing
+// the same DOM nodes).
