@@ -24,7 +24,7 @@
             <div style="font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px;">Items</div>
             <div style="font-size:.85rem;color:#555;line-height:1.5;">
               {% for item in order.items.all|slice:":2" %}{{ item.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
-              {% if order.items.count > 2 %}<span style="color:#bbb;"> +{{ order.items.count|add:"-2" }} more</span>{% endif %}
+              {% if order.items.all|length > 2 %}<span style="color:#bbb;"> +{{ order.items.all|length|add:"-2" }} more</span>{% endif %}
             </div>
           </div>
           <div class="col-sm-2">
