@@ -10,9 +10,9 @@
 </div>
 <section style="padding:50px 0;background:var(--cream);">
   <div class="container">
-    {% if wishlist.items.exists %}
+    {% if wishlist_items %}
     <div class="row g-4">
-      {% for item in wishlist.items.all %}
+      {% for item in wishlist_items %}
       <div class="col-sm-6 col-lg-4" data-aos="fade-up">
         <div class="mcard">
           <div class="mimg">
