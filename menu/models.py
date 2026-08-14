@@ -26,10 +26,22 @@ class Category(models.Model):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse('menu_category', kwargs={'slug': self.slug})
+        # There's no dedicated per-category page/route — categories are
+        # browsed via the full menu filtered by ?category=<slug>
+        # (see menu/views.py:full_menu). This previously pointed at a
+        # 'menu_category' URL name that was never defined anywhere,
+        # which would 500 the moment anything called it — including
+        # Django Admin's automatic "View on site" link for this model.
+        return f"{reverse('full_menu')}?category={self.slug}"
 
     @property
     def item_count(self):
+        # Use the annotated value when the queryset supplied one
+        # (see menu/views.py / api/views.py) to avoid one query per
+        # category when rendering a list; falls back to a live query
+        # for a single object fetched on its own.
+        if hasattr(self, '_item_count'):
+            return self._item_count
         return self.items.filter(is_available=True).count()
 
 
@@ -106,6 +118,9 @@ class MenuItem(models.Model):
 
     @property
     def average_rating(self):
+        # Same annotation-first pattern as Category.item_count above.
+        if hasattr(self, '_avg_rating'):
+            return round(self._avg_rating, 1) if self._avg_rating else 0.0
         reviews = self.reviews.all()
         if reviews.exists():
             return round(sum(r.rating for r in reviews) / reviews.count(), 1)
@@ -113,6 +128,8 @@ class MenuItem(models.Model):
 
     @property
     def review_count(self):
+        if hasattr(self, '_review_count'):
+            return self._review_count
         return self.reviews.count()
 
     def get_image_url(self):
