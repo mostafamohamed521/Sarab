@@ -129,7 +129,17 @@ document.getElementById('resPageForm').addEventListener('submit', function(e) {
       toast('Reservation confirmed! Code: '+d.confirmation_code);
       this.reset();
     } else {
-      toast('Please check your form and try again.', 'error');
+      // d.message covers rate-limiting (429); d.errors is Django's
+      // {field: [messages]} shape for form-validation failures (e.g.
+      // "date cannot be in the past"). Previously both were discarded
+      // in favor of one generic message, so a rate-limited or
+      // validation-failed user had no way to tell what actually went
+      // wrong.
+      let errMsg = d.message;
+      if (!errMsg && d.errors) {
+        errMsg = Object.values(d.errors).map(v => Array.isArray(v) ? v.join(' ') : v).join(' ');
+      }
+      toast(errMsg || 'Please check your form and try again.', 'error');
     }
   }).catch(()=>{ btn.innerHTML='<i class="fas fa-calendar-check"></i>Confirm Reservation'; btn.disabled=false; toast('Error. Try again.','error'); });
 });
