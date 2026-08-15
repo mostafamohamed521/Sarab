@@ -49,6 +49,13 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            # The "Remember me" checkbox existed in the template but
+            # nothing ever read it — every login silently got Django's
+            # default 2-week persistent session regardless of whether
+            # the box was checked. Now an unchecked box actually
+            # expires the session when the browser closes.
+            if not request.POST.get('remember_me'):
+                request.session.set_expiry(0)
             next_url = request.GET.get('next', 'home')
             messages.success(request, f'Welcome back, {user.first_name or user.email}!')
             return redirect(next_url)
