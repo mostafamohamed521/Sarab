@@ -114,7 +114,7 @@
             {% endfor %}
             <div style="margin-top:14px;">
               <div class="summary-row"><span>Subtotal</span><span>${{ cart.get_subtotal }}</span></div>
-              <div class="summary-row"><span>Tax (8%)</span><span>${{ cart.get_tax }}</span></div>
+              <div class="summary-row"><span>Tax ({{ tax_rate_percent }}%)</span><span>${{ cart.get_tax }}</span></div>
               <div class="summary-row"><span>Delivery</span><span>{% if cart.get_delivery_fee == 0 %}<span class="summary-free">FREE</span>{% else %}${{ cart.get_delivery_fee }}{% endif %}</span></div>
               <div class="summary-row" id="co-disc-row" style="display:none;color:#4ade80;"><span>Discount</span><span id="co-disc">-$0.00</span></div>
               <div class="summary-row total"><span>Total</span><span id="co-total">${{ cart.get_total }}</span></div>
@@ -153,6 +153,7 @@ document.querySelectorAll('.payment-option').forEach(opt=>{
   });
 });
 // Apply coupon
+const origCheckoutTotal = parseFloat('{{ cart.get_total|default:"0" }}');
 document.getElementById('cpnApply').addEventListener('click', function(){
   const code = document.getElementById('cpnCode').value.trim().toUpperCase();
   if (!code) return;
@@ -165,6 +166,10 @@ document.getElementById('cpnApply').addEventListener('click', function(){
       res.innerHTML='<i class="fas fa-check-circle me-1"></i>'+d.message;
       document.getElementById('co-disc-row').style.display='flex';
       document.getElementById('co-disc').textContent='-$'+d.discount;
+      // Same fix as cart.html — the total wasn't being recalculated
+      // after a coupon was applied, so it visually disagreed with the
+      // discount line right above it.
+      document.getElementById('co-total').textContent = '$'+(origCheckoutTotal - parseFloat(d.discount)).toFixed(2);
     } else {
       res.style.background='rgba(232,40,26,.08)'; res.style.color='var(--primary)';
       res.innerHTML='<i class="fas fa-times-circle me-1"></i>'+d.message;
