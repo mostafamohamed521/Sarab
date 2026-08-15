@@ -62,7 +62,7 @@
         <div class="summary-box">
           <div class="summary-title">Order Summary</div>
           <div class="summary-row"><span>Subtotal</span><span id="sum-sub">${{ cart.get_subtotal }}</span></div>
-          <div class="summary-row"><span>Tax (8%)</span><span id="sum-tax">${{ cart.get_tax }}</span></div>
+          <div class="summary-row"><span>Tax ({{ tax_rate_percent }}%)</span><span id="sum-tax">${{ cart.get_tax }}</span></div>
           <div class="summary-row">
             <span>Delivery</span>
             <span id="sum-del">{% if cart.get_delivery_fee == 0 %}<span class="summary-free">FREE</span>{% else %}${{ cart.get_delivery_fee }}{% endif %}</span>
@@ -72,7 +72,7 @@
           </div>
           <div class="summary-row total"><span>Total</span><span id="sum-total">${{ cart.get_total }}</span></div>
           {% if cart.get_subtotal < 30 %}
-          <div class="summary-note"><i class="fas fa-info-circle me-1" style="color:var(--secondary);"></i>Add ${% widthratio cart.get_delivery_fee 1 1 %} more for free delivery</div>
+          <div class="summary-note"><i class="fas fa-info-circle me-1" style="color:var(--secondary);"></i>Add ${{ cart.get_remaining_for_free_delivery|floatformat:2 }} more for free delivery</div>
           {% else %}
           <div class="summary-note" style="color:#16a34a;background:#f0fff4;"><i class="fas fa-check-circle me-1"></i>You qualify for free delivery!</div>
           {% endif %}
@@ -124,6 +124,7 @@ document.addEventListener('click', function(e) {
 });
 
 // Coupon
+const origCartTotal = parseFloat('{{ cart.get_total|default:"0" }}');
 document.getElementById('cpnBtn')?.addEventListener('click', function() {
   const code = document.getElementById('cpnInput').value.trim().toUpperCase();
   if (!code) return;
@@ -136,6 +137,12 @@ document.getElementById('cpnBtn')?.addEventListener('click', function() {
       msg.innerHTML='<i class="fas fa-check-circle me-1"></i>'+d.message;
       document.getElementById('sum-disc-row').style.display='flex';
       document.getElementById('sum-disc').textContent='-$'+d.discount;
+      // Previously left #sum-total showing the pre-discount amount —
+      // the discount line appeared but the total next to it never
+      // changed, so the numbers didn't add up on screen (the actual
+      // order placed server-side was always correctly discounted;
+      // this was a display-only bug).
+      document.getElementById('sum-total').textContent = '$'+(origCartTotal - parseFloat(d.discount)).toFixed(2);
     } else {
       msg.style.background='rgba(232,40,26,.08)'; msg.style.color='var(--primary)';
       msg.innerHTML='<i class="fas fa-times-circle me-1"></i>'+d.message;
