@@ -79,6 +79,14 @@ class Cart:
             return Decimal('0.00')
         return DELIVERY_FEE
 
+    def get_remaining_for_free_delivery(self):
+        # How much more the customer needs to add to the cart to hit
+        # FREE_DELIVERY_THRESHOLD — not the same number as the flat
+        # DELIVERY_FEE, which the "Add $X more for free delivery"
+        # message was previously (incorrectly) displaying instead.
+        remaining = FREE_DELIVERY_THRESHOLD - self.get_subtotal()
+        return remaining if remaining > 0 else Decimal('0.00')
+
     def get_total(self):
         return self.get_subtotal() + self.get_tax() + self.get_delivery_fee()
 
