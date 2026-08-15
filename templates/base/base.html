@@ -178,7 +178,7 @@
   {% if cart_count > 0 %}
   <div id="cartFooter" style="padding:18px 22px;border-top:1px solid #f0f0f0;flex-shrink:0;">
     <div style="display:flex;justify-content:space-between;font-size:.85rem;color:#888;margin-bottom:6px;"><span>Subtotal</span><span>${{ cart.get_subtotal }}</span></div>
-    <div style="display:flex;justify-content:space-between;font-size:.85rem;color:#888;margin-bottom:6px;"><span>Tax (8%)</span><span>${{ cart.get_tax }}</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:.85rem;color:#888;margin-bottom:6px;"><span>Tax ({{ tax_rate_percent }}%)</span><span>${{ cart.get_tax }}</span></div>
     <div style="display:flex;justify-content:space-between;font-size:.85rem;color:#888;margin-bottom:14px;"><span>Delivery</span><span>{% if cart.get_delivery_fee == 0 %}<span style="color:#4ade80;font-weight:600;">FREE</span>{% else %}${{ cart.get_delivery_fee }}{% endif %}</span></div>
     <div style="display:flex;justify-content:space-between;font-weight:700;font-size:1rem;padding-top:12px;border-top:1px solid #f0f0f0;margin-bottom:16px;"><span>Total</span><span style="color:var(--primary);">${{ cart.get_total }}</span></div>
     <a href="{% url 'checkout' %}" onclick="closeCart()" class="btn-red w-100 justify-content-center d-flex mb-2"><i class="fas fa-lock"></i>Checkout</a>
