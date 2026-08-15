@@ -7,13 +7,25 @@
     <div class="row justify-content-center">
       <div class="col-md-6 col-lg-5">
         <div class="result-card">
+          {% if order.payment_status == 'paid' %}
           <div class="result-icon success"><i class="fas fa-check fa-2x" style="color:#fff;"></i></div>
           <h2>Payment Successful!</h2>
           <p>Your payment of <strong style="color:var(--primary);">${{ order.total }}</strong> was processed successfully.</p>
+          {% else %}
+          <!-- This page can be reached right after the Stripe redirect
+               before our own verification with Stripe has confirmed
+               the charge (see payments/views.py:payment_success) — it
+               never assumes success just because the browser landed
+               here, so it must not claim "Paid" until the order's
+               real payment_status says so. -->
+          <div class="result-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706);"><i class="fas fa-clock fa-2x" style="color:#fff;"></i></div>
+          <h2>Confirming Your Payment</h2>
+          <p>We're finalizing your payment of <strong style="color:var(--primary);">${{ order.total }}</strong> — this can take a moment. We'll update your order the instant it's confirmed.</p>
+          {% endif %}
           <div class="result-detail-box">
             <div class="result-detail-row"><span class="lbl">Order Number</span><span class="val highlight">{{ order.order_number }}</span></div>
             <div class="result-detail-row"><span class="lbl">Payment Method</span><span class="val">{{ order.get_payment_method_display }}</span></div>
-            <div class="result-detail-row"><span class="lbl">Status</span><span class="val"><span class="status-badge paid">Paid</span></span></div>
+            <div class="result-detail-row"><span class="lbl">Status</span><span class="val"><span class="status-badge {{ order.payment_status }}">{{ order.get_payment_status_display }}</span></span></div>
           </div>
           <div class="result-actions">
             <a href="{% url 'order_tracking' order.order_number %}" class="btn-red"><i class="fas fa-map-marker-alt"></i>Track Order</a>
