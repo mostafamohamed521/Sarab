@@ -47,7 +47,7 @@
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px;">
           <div style="display:flex;gap:3px;">
             {% for i in "12345" %}
-            <i class="{% if forloop.counter <= item.average_rating|floatformat:'0' %}fas{% else %}far{% endif %} fa-star" style="color:var(--secondary);font-size:.88rem;"></i>
+            <i class="{% if forloop.counter <= item.average_rating %}fas{% else %}far{% endif %} fa-star" style="color:var(--secondary);font-size:.88rem;"></i>
             {% endfor %}
           </div>
           <span style="font-size:.85rem;color:#888;">({{ item.review_count }} reviews)</span>
