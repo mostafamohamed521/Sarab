@@ -269,6 +269,8 @@
 .status-badge.refunded      { background: rgba(107,114,128,.12); color: #4b5563; }
 .status-badge.paid          { background: rgba(74,222,128,.15); color: #16a34a; }
 .status-badge.failed        { background: rgba(239,68,68,.12);  color: #dc2626; }
+.status-badge.completed     { background: rgba(74,222,128,.15); color: #16a34a; }
+.status-badge.no_show       { background: rgba(107,114,128,.12); color: #4b5563; }
 
 /* ── Invoice ── */
 .invoice-page {
