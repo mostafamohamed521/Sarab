@@ -13,7 +13,7 @@
           <div class="result-detail-box">
             <div class="conf-grid">
               <div><div style="font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Confirmation Code</div><div style="font-weight:700;color:var(--primary);font-size:1.05rem;">{{ reservation.confirmation_code }}</div></div>
-              <div><div style="font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Status</div><span class="status-badge pending">Pending Confirmation</span></div>
+              <div><div style="font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Status</div><span class="status-badge {{ reservation.status }}">{{ reservation.get_status_display }}</span></div>
               <div><div style="font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Date</div><div style="font-weight:600;font-size:.9rem;color:var(--dark);">{{ reservation.date|date:"l, M d, Y" }}</div></div>
               <div><div style="font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Time</div><div style="font-weight:600;font-size:.9rem;color:var(--dark);">{{ reservation.time|time:"g:i A" }}</div></div>
               <div><div style="font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Guests</div><div style="font-weight:600;font-size:.9rem;color:var(--dark);">{{ reservation.guests }} People</div></div>
