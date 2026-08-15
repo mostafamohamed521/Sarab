@@ -108,10 +108,18 @@ document.getElementById('cSendBtn').addEventListener('click', function() {
     body:JSON.stringify({name,email,phone:document.getElementById('cPhone').value,subject:document.getElementById('cSubject').value,message:msg})
   }).then(r=>r.json()).then(d=>{
     btn.innerHTML='<i class="fas fa-paper-plane"></i>Send Message'; btn.disabled=false;
-    const ok=document.getElementById('cOk');
-    ok.style.display='flex'; ok.scrollIntoView({behavior:'smooth',block:'nearest'});
-    toast(d.message||'Message sent!');
-  }).catch(()=>{ btn.innerHTML='<i class="fas fa-paper-plane"></i>Send Message'; btn.disabled=false; });
+    // Previously showed the green "Message Sent!" box unconditionally,
+    // even when d.status was 'error' (rate-limited, invalid email,
+    // etc.) — so a failed submission still displayed a false success
+    // confirmation alongside the error toast.
+    if (d.status === 'ok') {
+      const ok=document.getElementById('cOk');
+      ok.style.display='flex'; ok.scrollIntoView({behavior:'smooth',block:'nearest'});
+      toast(d.message||'Message sent!');
+    } else {
+      toast(d.message||'Something went wrong. Please try again.', 'error');
+    }
+  }).catch(()=>{ btn.innerHTML='<i class="fas fa-paper-plane"></i>Send Message'; btn.disabled=false; toast('Error. Please try again.','error'); });
 });
 </script>
 {% endblock %}
