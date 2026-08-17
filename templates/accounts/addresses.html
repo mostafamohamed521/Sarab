@@ -48,6 +48,7 @@
         <div class="box-card" style="height:100%;margin-bottom:0;">
           <div class="box-card-title"><i class="fas fa-plus"></i>Add New Address</div>
           <form method="POST" action="{% url 'add_address' %}">{% csrf_token %}
+            <input type="hidden" name="country" value="United States"/>
             <div class="row g-2">
               <div class="col-12"><select name="label" class="fctrl"><option value="home">🏠 Home</option><option value="work">💼 Work</option><option value="other">📍 Other</option></select></div>
               <div class="col-sm-6"><input type="text" name="full_name" class="fctrl" placeholder="Full Name" required/></div>
