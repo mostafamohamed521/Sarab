@@ -7,8 +7,11 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
 from .models import Address, NewsletterSubscriber
 from .forms import RegisterForm, LoginForm, ProfileForm, AddressForm, CustomPasswordResetForm, CustomSetPasswordForm
-from config.ratelimit import is_rate_limited, record_attempt
+from config.ratelimit import is_rate_limited, record_attempt, get_client_ip
 import json
+import logging
+
+logger = logging.getLogger('security')
 
 
 def register_view(request):
@@ -61,6 +64,8 @@ def login_view(request):
             return redirect(next_url)
         else:
             record_attempt(request, 'login', window_seconds=300)
+            logger.warning('Failed login attempt for %r from IP %s',
+                            request.POST.get('username', ''), get_client_ip(request))
             messages.error(request, 'Invalid email or password.')
     else:
         form = LoginForm()
@@ -92,8 +97,7 @@ def profile_view(request):
 @login_required
 def addresses_view(request):
     addresses = request.user.addresses.all()
-    form = AddressForm()
-    return render(request, 'accounts/addresses.html', {'addresses': addresses, 'form': form})
+    return render(request, 'accounts/addresses.html', {'addresses': addresses})
 
 
 @login_required
