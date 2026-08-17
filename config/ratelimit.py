@@ -1,4 +1,7 @@
+import logging
 from django.core.cache import cache
+
+logger = logging.getLogger('security')
 
 
 def get_client_ip(request):
@@ -19,11 +22,17 @@ def is_rate_limited(request, bucket, max_attempts=5, window_seconds=300):
 
     Returns True if the caller should be blocked. Callers are expected
     to increment via record_attempt() only on the paths that matter
-    (e.g. a failed login), not on every request.
+    (e.g. a failed login), not on every request. Logging lives here —
+    not at each call site — so every rate-limited endpoint (current
+    and future) is covered by one code path instead of needing a
+    matching log call added everywhere is_rate_limited() is used.
     """
     key = f'ratelimit:{bucket}:{get_client_ip(request)}'
     count = cache.get(key, 0)
-    return count >= max_attempts
+    limited = count >= max_attempts
+    if limited:
+        logger.warning('Rate limit exceeded: bucket=%s ip=%s count=%d', bucket, get_client_ip(request), count)
+    return limited
 
 
 def record_attempt(request, bucket, window_seconds=300):
