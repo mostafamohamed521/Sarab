@@ -1,25 +1,45 @@
 # Sarab — Django Food & Restaurant Platform
 
-A complete, production-ready Django e-commerce and restaurant management platform.
+A complete Django e-commerce and restaurant management platform: online ordering, table
+reservations, a customer account system, reviews/wishlist, Stripe payments, and a REST API —
+all backed by Django Admin for staff.
 
-## Quick Start
+This codebase has been through a full security, integrity, and code-quality audit. See
+[`CHANGELOG.md`](CHANGELOG.md) for the complete list of what was reviewed and fixed — including
+a systematic OWASP Top 10 pass and an important, current finding about Django's own support
+lifecycle (Django 4.2 LTS reached end-of-life in April 2026; see `CHANGELOG.md`'s A06 section
+before deploying this anywhere long-term). The sections below reflect the **current, audited**
+state of the project.
+
+## Quick Start (local development)
 
 ```bash
-# Install dependencies
+# 1. Install dependencies
 pip install -r requirements.txt
 
-# Apply migrations
+# 2. (Optional for local dev) Set environment variables — see .env.example
+#    for the full list. settings.py reads these directly from the process
+#    environment; there's no python-dotenv dependency, so a .env file by
+#    itself does nothing unless your shell/host loads it for you, e.g.:
+export $(cat .env.example | grep -v '^#' | xargs)   # or set them however your shell/host prefers
+
+# 3. Apply migrations
 python manage.py migrate
 
-# Seed sample data
+# 4. Seed sample data (categories, menu items, users, coupons, reservations...)
 python manage.py seed_data
 
-# Create admin superuser (or use seeded admin@sarab.com / admin123)
+# 5. Create your own admin superuser (or use the seeded admin@sarab.com / admin123)
 python manage.py createsuperuser
 
-# Run development server
+# 6. Run the development server
 python manage.py runserver
 ```
+
+Without those variables set, the app falls back to safe local-development
+defaults (`DEBUG=True`, a placeholder `SECRET_KEY`, `ALLOWED_HOSTS=*`, console email backend,
+placeholder Stripe test keys) — so the Quick Start above works out of the box. **None of those
+defaults are safe for a real deployment** — see [Deploying to Production](#deploying-to-production).
 
 ## Access Points
 
@@ -35,24 +55,38 @@ python manage.py runserver
 | `http://localhost:8000/admin/` | Django Admin |
 | `http://localhost:8000/api/v1/` | REST API |
 
-## Admin Credentials (seeded)
-- **Email:** admin@sarab.com
-- **Password:** admin123
+## Seeded Accounts (local/dev data only — `seed_data` command)
 
-## Sample Customer Accounts
-- customer@sarab.com / sarab2026
-- jane@sarab.com / sarab2026
+| Role | Email | Password | Django Admin access |
+|------|-------|----------|----------------------|
+| Admin | admin@sarab.com | admin123 | ✅ Yes |
+| Staff | staff@sarab.com | sarab2026 | ❌ No — see below |
+| Customer | customer@sarab.com | sarab2026 | ❌ No |
+| Customer | jane@sarab.com | sarab2026 | ❌ No |
 
-## Sample Promo Codes
-- `WELCOME15` — 15% off any order
-- `SAVE5` — $5 off orders over $20
-- `FRIDAY20` — 20% off orders over $30
+These are seed-script credentials for local development only. Never seed this data, or leave
+these accounts active, on a real deployment.
+
+**Django Admin (`/admin/`) is restricted to `role=admin` accounts only** (or any superuser, as
+a safety net so `python manage.py createsuperuser` always works even though it doesn't prompt
+for `role`). Having `is_staff=True` alone is *not* enough — the seeded `staff@sarab.com` account
+demonstrates this: even if it were granted `is_staff=True`, its `role` is `staff`, so it's
+bounced back to the login page rather than reaching the dashboard. See
+`config/admin_dashboard.py::_admin_dashboard_only`.
+
+## Sample Promo Codes (seeded)
+
+| Code | Discount |
+|------|----------|
+| `WELCOME15` | 15% off any order |
+| `SAVE5` | $5 off orders over $20 |
+| `FRIDAY20` | 20% off orders over $30, limited uses |
 
 ## Architecture
 
 ```
 sarab_project/
-├── config/              Django project settings & root URLs
+├── config/              Settings, root URLs, the rate limiter, and admin dashboard customization
 ├── accounts/            Custom user model, auth, addresses
 ├── menu/                Categories, menu items, variants, addons
 ├── cart/                Session-based cart engine
@@ -63,21 +97,28 @@ sarab_project/
 ├── cms_pages/           About, Contact, Blog, FAQ, legal pages
 ├── api/                 REST API (DRF) — all resources
 ├── templates/           All HTML templates (Django)
-├── static/              CSS, JS, images (from original template)
-├── tests.py             109 automated tests
+├── static/               CSS, JS, images
+├── tests.py              124 automated tests
+├── .env.example           Documented environment variables for deployment
+├── CHANGELOG.md           Full audit trail of what was reviewed and fixed
+├── render.yaml            Render Blueprint (one-click deploy config)
+├── build.sh               Render build script (install, collectstatic, migrate)
 └── requirements.txt
 ```
 
 ## REST API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/categories/` | All menu categories |
-| GET | `/api/v1/menu/` | All menu items (search, filter, order) |
-| GET | `/api/v1/menu/{slug}/` | Single menu item detail |
-| GET/POST | `/api/v1/orders/` | Customer orders (auth required) |
-| GET/POST | `/api/v1/reservations/` | Reservations |
-| GET | `/api/v1/reviews/` | Approved reviews |
+All endpoints are versioned under `/api/v1/` and rate-limited (100 requests/minute for
+anonymous clients, 300/minute for authenticated users).
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/v1/categories/` | Public | All active menu categories |
+| GET | `/api/v1/menu/` | Public | Menu items (search, filter, order) |
+| GET | `/api/v1/menu/{slug}/` | Public | Single menu item detail |
+| GET, POST | `/api/v1/orders/` | Required | List/create your own orders — pricing is always computed server-side from live menu-item prices |
+| GET, POST | `/api/v1/reservations/` | Public read / auth to create | List/create your own reservations |
+| GET, POST | `/api/v1/reviews/` | Public read / auth to create | Approved reviews; only the review's author can edit/delete it |
 
 Query parameters:
 - `?search=burger` — full-text search
@@ -88,18 +129,16 @@ Query parameters:
 ## Features
 
 ### Customer
-- Account registration & login with email
-- Profile management & avatar upload
-- Saved delivery addresses (multiple, default)
-- Full browsing menu with category filters & search
+- Account registration & login with email, optional "remember me" session
+- Profile management & avatar upload (5MB limit)
+- Saved delivery addresses (multiple, with a single enforced default)
+- Full menu browsing with category filters & live search
 - Real-time cart sidebar with quantity controls
-- Multi-step checkout with saved address selection
-- Coupon/promo code application
+- Multi-step checkout with saved address selection and coupon codes
 - Order placement (cash / Stripe / PayPal)
-- Live order tracking with status timeline
-- Order history & detail views
-- Printable invoice per order
-- Table reservation with confirmation code
+- Live order tracking with a status timeline
+- Order history, detail view, and printable invoice
+- Table reservation with a confirmation code
 - Reservation history & cancellation
 - Wishlist (toggle heart on any item)
 - Item reviews with star ratings
@@ -107,55 +146,111 @@ Query parameters:
 - Newsletter subscription
 
 ### Admin (Django Admin)
-- Full user management
+- Dashboard access is restricted to `role=admin` accounts (or superusers) — `is_staff=True`
+  alone is no longer sufficient
+- **Dashboard overview page**: today's orders/revenue, pending orders, pending reservations,
+  unread messages, reviews awaiting approval, unavailable menu items, and a recent-orders table
+  — every stat links to the relevant filtered list
+- **Bulk order actions**: change status (Confirmed/Preparing/Ready/Out for Delivery/Delivered/
+  Cancelled) or mark paid for multiple selected orders at once, without opening each one
+- **Bulk reservation actions**: Confirmed/Completed/No Show/Cancelled for multiple selected
+  reservations at once
+- User management — role/staff/superuser fields are editable by superusers only
 - Menu item CRUD with inline variations & addons
 - Category management with ordering
-- Order management with status updates
-- Reservation management
-- Coupon management
-- Blog post management
-- FAQ management
+- Reservation & table management
+- Coupon management (usage caps and minimum-order rules are enforced)
+- Blog post & FAQ management
 - Contact message inbox
 - Review moderation
 
 ### Pages
-- Home (hero, categories, menu, gallery, chefs, hours, testimonials, reservation form, blog, newsletter, contact)
-- Full Menu (filter by category, search, expandable item cards)
-- Item Detail (gallery, add to cart, reviews, related items)
-- Cart (full cart management, coupon application)
-- Checkout (saved addresses, payment method selection)
-- Order Success, Tracking, History, Detail
-- Invoice (print-ready)
-- Table Reservation (form + confirmation)
-- Reservation History
-- Login / Register / Forgot Password / Reset Password
-- Profile / Edit Profile / Addresses / Wishlist
-- About Us / Contact / FAQ / Blog / Legal pages
+Home · Full Menu · Item Detail · Cart · Checkout · Order Success/Tracking/History/Detail ·
+Invoice · Table Reservation & History · Login/Register/Password Reset · Profile/Addresses/Wishlist
+· About/Contact/FAQ/Blog/Legal pages — 50 routes total, all verified to render and connect to a
+real backend (see `CHANGELOG.md`).
 
 ## Running Tests
 
 ```bash
 python manage.py test tests -v 2
-# Expected: 109 tests, all OK
+# Expected: 124 tests, all OK
 ```
 
-## Stripe Integration
+## Configuration (environment variables)
 
-Set these in `config/settings.py`:
-```python
-STRIPE_PUBLISHABLE_KEY = 'pk_live_...'
-STRIPE_SECRET_KEY = 'sk_live_...'
-STRIPE_WEBHOOK_SECRET = 'whsec_...'
+All secrets and environment-specific settings are read from real environment variables with
+safe local-dev fallbacks — nothing is hardcoded in `config/settings.py` anymore.
+`.env.example` documents every variable `settings.py` reads; export them however your
+shell or hosting platform expects (there's no `python-dotenv` dependency here, so a `.env`
+file on its own is inert unless something loads it into the environment first):
+
+```
+DJANGO_SECRET_KEY=<long random value>
+DJANGO_DEBUG=False
+DJANGO_ALLOWED_HOSTS=example.com,www.example.com
+
+STRIPE_PUBLISHABLE_KEY=pk_live_xxx
+STRIPE_SECRET_KEY=sk_live_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
 ```
 
-## Production Checklist
+Set the Stripe webhook secret to match what Stripe's dashboard gives you once the webhook
+endpoint (`/payments/webhook/`) is registered against your live domain — this is what makes
+`payment_status` transitions to `paid` trustworthy rather than just trusting the browser redirect.
 
-- [ ] Set `DEBUG = False`
-- [ ] Set a strong `SECRET_KEY`
-- [ ] Configure real email backend (SMTP/SendGrid)
-- [ ] Use PostgreSQL instead of SQLite
-- [ ] Set `ALLOWED_HOSTS` to your domain
-- [ ] Configure AWS S3 or similar for media files
-- [ ] Set real Stripe keys
+## Deploying to Production
+
+- [ ] Set `DJANGO_DEBUG=False`
+- [ ] Set a strong, random `DJANGO_SECRET_KEY` (never reuse the local-dev default)
+- [ ] Set `DJANGO_ALLOWED_HOSTS` to your real domain(s) — not `*`
+- [ ] Point `EMAIL_BACKEND` at a real SMTP provider (it's the console backend by default —
+      password reset emails currently only print to the terminal)
+- [ ] Set `DATABASE_URL` to a real PostgreSQL instance (see [Deploying to Render](#deploying-to-render-free-tier)
+      below) — `config/settings.py` uses it automatically when present, falling back to SQLite otherwise
+- [ ] Configure S3 (or similar) for `MEDIA_ROOT` if you expect real traffic/uploads — static
+      files (CSS/JS/images) are already handled by WhiteNoise and need no extra setup, but
+      user-uploaded media (avatars, menu photos) still writes to local disk, which most PaaS
+      free tiers wipe on every redeploy
+- [ ] Set real Stripe keys and webhook secret (see above)
+- [ ] Run `python manage.py makemigrations accounts && python manage.py migrate` (picks up the
+      avatar upload size validator — a model-level change, not a schema change, but Django will
+      flag it as pending until this runs)
 - [ ] Run `python manage.py collectstatic`
-- [ ] Use gunicorn + nginx for serving
+- [ ] Point `CACHES` at Redis/Memcached if running multiple app workers — the rate limiter
+      (`config/ratelimit.py`) needs a cache shared across processes to work correctly; the
+      in-memory default only protects a single process
+- [ ] Serve with gunicorn (already in `requirements.txt`) behind your platform's HTTPS proxy
+- [ ] Run the full test suite (`python manage.py test`) against the production settings profile
+      before going live
+
+## Deploying to Render (free tier)
+
+The project is pre-configured for Render — `gunicorn`, `psycopg2-binary`, `dj-database-url`,
+and `whitenoise` are already in `requirements.txt`, and `config/settings.py` picks up Render's
+`DATABASE_URL`/`RENDER_EXTERNAL_HOSTNAME` automatically.
+
+**Option A — one-click via Blueprint (`render.yaml`):**
+1. Push this repo to GitHub.
+2. On Render: **New → Blueprint**, point it at your repo. `render.yaml` provisions the free
+   Postgres database and the web service together, and generates a random `DJANGO_SECRET_KEY`
+   for you.
+3. After the first deploy, add `STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, and
+   `STRIPE_WEBHOOK_SECRET` in the service's **Environment** tab — these are real secrets and
+   deliberately aren't in `render.yaml`.
+
+**Option B — manual setup:**
+1. On Render: **New → PostgreSQL** (free plan) → note the generated **Internal Database URL**.
+2. **New → Web Service**, connect your repo.
+   - Build Command: `bash build.sh`
+   - Start Command: `gunicorn config.wsgi:application`
+3. Add environment variables: `DJANGO_DEBUG=False`, `DJANGO_SECRET_KEY` (any long random
+   string), `DATABASE_URL` (the Internal Database URL from step 1), plus the three Stripe
+   variables above.
+4. Deploy. Render assigns a `*.onrender.com` URL and sets `RENDER_EXTERNAL_HOSTNAME`
+   automatically — `settings.py` adds it to `ALLOWED_HOSTS` for you.
+
+**Known limits of Render's free tier:** the service sleeps after 15 minutes with no traffic
+(the first request after that takes a few seconds to wake it up), and the free Postgres
+database expires after 90 days unless upgraded. Fine for testing/demos; budget for the paid
+tier before relying on this for real traffic.
