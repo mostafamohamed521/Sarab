@@ -109,6 +109,18 @@ class Command(BaseCommand):
 
     def _seed_users(self):
         from accounts.models import CustomUser
+
+        # Only account that should actually be able to log into Django
+        # Admin, matching the "role must be admin" gate enforced in
+        # config/admin_dashboard.py — everything else below is
+        # role=customer/staff, which is deliberately NOT enough for
+        # admin access on its own (is_staff alone isn't checked either).
+        if not CustomUser.objects.filter(email='admin@sarab.com').exists():
+            CustomUser.objects.create_superuser(
+                email='admin@sarab.com', username='admin@sarab.com', password='admin123',
+                first_name='Sarab', last_name='Admin', role=CustomUser.ROLE_ADMIN,
+            )
+
         users = [
             ('customer@sarab.com', 'Alex', 'Johnson', CustomUser.ROLE_CUSTOMER),
             ('jane@sarab.com', 'Jane', 'Smith', CustomUser.ROLE_CUSTOMER),
@@ -123,6 +135,7 @@ class Command(BaseCommand):
                 )
                 count += 1
         self.stdout.write(self.style.SUCCESS(f'  ✓ {count} sample users (password: sarab2026)'))
+        self.stdout.write(self.style.SUCCESS('  ✓ 1 admin account (admin@sarab.com / admin123)'))
 
     def _seed_coupons(self):
         from orders.models import Coupon
