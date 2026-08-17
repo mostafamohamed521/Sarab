@@ -15,6 +15,7 @@
         <div class="box-card">
           <div class="box-card-title"><i class="fas fa-map-marker-alt"></i>Edit Address</div>
           <form method="POST">{% csrf_token %}
+            <input type="hidden" name="country" value="{{ address.country }}"/>
             <div class="row g-3">
               <div class="col-12">
                 <label class="flbl">Address Type</label>
