@@ -10,7 +10,7 @@ from datetime import timedelta, date
 import json
 
 from accounts.models import CustomUser, Address, NewsletterSubscriber
-from menu.models import Category, MenuItem, Tag, ContactMessage
+from menu.models import Category, MenuItem, ContactMessage
 from cart.cart import Cart
 from orders.models import Order, OrderItem, OrderStatusUpdate, Coupon
 from reservations.models import Reservation, Table
@@ -524,6 +524,71 @@ class AccountViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'accounts/profile.html')
 
+    def test_add_address(self):
+        """Regression test: the add-address form previously had no way to
+        submit `country`, a required AddressForm field, so every
+        submission silently failed validation and nothing was ever
+        saved."""
+        self.client.login(username='test@sarab.com', password='testpass123')
+        response = self.client.post(reverse('add_address'), {
+            'label': 'home', 'full_name': 'Test User', 'phone': '555-0100',
+            'street_address': '123 Test St', 'city': 'New York', 'state': 'NY',
+            'zip_code': '10001', 'country': 'United States',
+        })
+        self.assertRedirects(response, reverse('addresses'))
+        self.assertTrue(Address.objects.filter(user=self.user, full_name='Test User').exists())
+
+    def test_add_address_sets_default_exclusively(self):
+        self.client.login(username='test@sarab.com', password='testpass123')
+        first = Address.objects.create(
+            user=self.user, full_name='First', phone='555', street_address='1 St',
+            city='NY', state='NY', zip_code='10001', country='United States', is_default=True,
+        )
+        self.client.post(reverse('add_address'), {
+            'label': 'work', 'full_name': 'Second', 'phone': '555-0200',
+            'street_address': '456 Ave', 'city': 'New York', 'state': 'NY',
+            'zip_code': '10002', 'country': 'United States', 'is_default': 'on',
+        })
+        first.refresh_from_db()
+        self.assertFalse(first.is_default)
+        self.assertTrue(Address.objects.get(full_name='Second').is_default)
+
+    def test_edit_address(self):
+        self.client.login(username='test@sarab.com', password='testpass123')
+        address = Address.objects.create(
+            user=self.user, full_name='Old Name', phone='555', street_address='1 St',
+            city='NY', state='NY', zip_code='10001', country='United States',
+        )
+        response = self.client.post(reverse('edit_address', args=[address.pk]), {
+            'label': 'work', 'full_name': 'New Name', 'phone': '555-0300',
+            'street_address': '789 Blvd', 'city': 'Boston', 'state': 'MA',
+            'zip_code': '02101', 'country': 'United States',
+        })
+        self.assertRedirects(response, reverse('addresses'))
+        address.refresh_from_db()
+        self.assertEqual(address.full_name, 'New Name')
+        self.assertEqual(address.city, 'Boston')
+
+    def test_edit_address_blocks_other_users(self):
+        other = make_user(email='other4@sarab.com')
+        address = Address.objects.create(
+            user=other, full_name='Other User', phone='555', street_address='1 St',
+            city='NY', state='NY', zip_code='10001', country='United States',
+        )
+        self.client.login(username='test@sarab.com', password='testpass123')
+        response = self.client.get(reverse('edit_address', args=[address.pk]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_delete_address(self):
+        self.client.login(username='test@sarab.com', password='testpass123')
+        address = Address.objects.create(
+            user=self.user, full_name='To Delete', phone='555', street_address='1 St',
+            city='NY', state='NY', zip_code='10001', country='United States',
+        )
+        response = self.client.post(reverse('delete_address', args=[address.pk]))
+        self.assertRedirects(response, reverse('addresses'))
+        self.assertFalse(Address.objects.filter(pk=address.pk).exists())
+
 
 class OrderViewTest(TestCase):
     def setUp(self):
@@ -572,7 +637,7 @@ class OrderViewTest(TestCase):
         """Regression test: another logged-in user must not be able to
         view this order just by knowing its order_number (IDOR)."""
         order = make_order(user=self.user)
-        other = make_user(email='other@sarab.com', username='other')
+        other = make_user(email='other@sarab.com')
         self.client.login(username='other@sarab.com', password='testpass123')
         response = self.client.get(reverse('order_success', args=[order.order_number]))
         self.assertEqual(response.status_code, 403)
@@ -669,7 +734,7 @@ class ReservationViewTest(TestCase):
             user=self.user, full_name='Test', email='t@t.com', phone='555',
             date=date.today() + timedelta(days=1), time='19:00', guests=2
         )
-        make_user(email='other3@sarab.com', username='other3')
+        make_user(email='other3@sarab.com')
         self.client.login(username='other3@sarab.com', password='testpass123')
         response = self.client.get(reverse('reservation_confirmation', args=[res.confirmation_code]))
         self.assertEqual(response.status_code, 403)
@@ -805,7 +870,7 @@ class PaymentViewTest(TestCase):
         to view someone else's invoice by guessing/knowing the order
         number (IDOR)."""
         order = make_order(user=self.user)
-        make_user(email='other2@sarab.com', username='other2')
+        make_user(email='other2@sarab.com')
         self.client.logout()
         self.client.login(username='other2@sarab.com', password='testpass123')
         response = self.client.get(reverse('invoice', args=[order.order_number]))
@@ -891,6 +956,95 @@ class CMSModelTest(TestCase):
 
 
 # ─── Context Processors ───────────────────────────────────────────────────────
+
+class AdminSiteAccessTest(TestCase):
+    """Regression tests for config/admin_dashboard.py's has_permission override —
+    Django Admin access previously only checked is_staff, ignoring this
+    project's own customer/staff/admin role distinction entirely."""
+
+    def test_admin_role_can_access_dashboard(self):
+        user = CustomUser.objects.create_superuser(
+            email='dashadmin@sarab.com', username='dashadmin@sarab.com',
+            password='pass123', role=CustomUser.ROLE_ADMIN,
+        )
+        self.client.login(username='dashadmin@sarab.com', password='pass123')
+        response = self.client.get(reverse('admin:index'), follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Site administration')
+
+    def test_staff_role_blocked_from_dashboard(self):
+        """A role=staff account, even with is_staff=True, must not reach
+        any admin page — only role=admin (or a superuser) may."""
+        user = CustomUser.objects.create_user(
+            email='juststaff@sarab.com', username='juststaff@sarab.com',
+            password='pass123', role=CustomUser.ROLE_STAFF, is_staff=True,
+        )
+        self.client.login(username='juststaff@sarab.com', password='pass123')
+        response = self.client.get(reverse('admin:index'), follow=True)
+        self.assertNotContains(response, 'Site administration')
+
+    def test_customer_blocked_from_dashboard(self):
+        make_user()
+        self.client.login(username='test@sarab.com', password='testpass123')
+        response = self.client.get(reverse('admin:index'), follow=True)
+        self.assertNotContains(response, 'Site administration')
+
+    def test_dashboard_shows_stats(self):
+        """Regression coverage for the custom admin index (config/admin_dashboard.py
+        ::_dashboard_index / templates/admin/index.html) — previously the
+        dashboard was just Django's bare app/model list with no overview."""
+        admin_user = CustomUser.objects.create_superuser(
+            email='statsadmin@sarab.com', username='statsadmin@sarab.com',
+            password='pass123', role=CustomUser.ROLE_ADMIN,
+        )
+        make_order(user=admin_user)  # gives "Today's Orders"/"Recent Orders" something to show
+        self.client.login(username='statsadmin@sarab.com', password='pass123')
+        response = self.client.get(reverse('admin:index'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Today's Orders")
+        self.assertContains(response, 'Pending Orders')
+        self.assertContains(response, 'Pending Reservations')
+        self.assertContains(response, 'Unread Messages')
+
+    def test_bulk_mark_order_confirmed_creates_status_update(self):
+        """The bulk order-status admin actions must go through save() +
+        OrderStatusUpdate.objects.create() like the customer-facing
+        cancel_order view does — not a bare queryset.update(), which
+        would silently skip the tracking record order_tracking depends
+        on."""
+        admin_user = CustomUser.objects.create_superuser(
+            email='bulkadmin@sarab.com', username='bulkadmin@sarab.com',
+            password='pass123', role=CustomUser.ROLE_ADMIN,
+        )
+        order = make_order(user=admin_user)
+        self.assertEqual(order.status, Order.STATUS_PENDING)
+        self.client.login(username='bulkadmin@sarab.com', password='pass123')
+        self.client.post('/admin/orders/order/', {
+            'action': 'mark_confirmed',
+            '_selected_action': [str(order.pk)],
+        })
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.STATUS_CONFIRMED)
+        self.assertTrue(order.status_updates.filter(status=Order.STATUS_CONFIRMED).exists())
+
+    def test_bulk_mark_reservation_confirmed(self):
+        admin_user = CustomUser.objects.create_superuser(
+            email='resbulkadmin@sarab.com', username='resbulkadmin@sarab.com',
+            password='pass123', role=CustomUser.ROLE_ADMIN,
+        )
+        reservation = Reservation.objects.create(
+            full_name='Test', email='t@t.com', phone='555',
+            date=date.today() + timedelta(days=1), time='19:00', guests=2,
+        )
+        self.assertEqual(reservation.status, Reservation.STATUS_PENDING)
+        self.client.login(username='resbulkadmin@sarab.com', password='pass123')
+        self.client.post('/admin/reservations/reservation/', {
+            'action': 'mark_confirmed',
+            '_selected_action': [str(reservation.pk)],
+        })
+        reservation.refresh_from_db()
+        self.assertEqual(reservation.status, Reservation.STATUS_CONFIRMED)
+
 
 class ContextProcessorTest(TestCase):
     def setUp(self):
