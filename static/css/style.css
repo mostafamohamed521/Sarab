@@ -448,6 +448,28 @@ section {
   align-items: center;
   gap: 9px;
 }
+.fcard.fc1,
+.fcard.fc2,
+.fcard.fc3 {
+  /* Fully self-contained so these floating hero badges are immune to
+     either of the two competing plain .fcard rules in this file (one
+     for these badges' original small-pill look, one added later for
+     an unrelated "info card" grid pattern used on the contact/about
+     pages and elsewhere on the homepage). Before this rule existed,
+     .fcard.fc1/.fc2/.fc3 only set position/top/left/animation and
+     silently inherited whichever plain .fcard's padding/border-radius/
+     box-shadow happened to win by source order — which was already
+     the oversized "info card" version (32px padding, 18px radius),
+     not the small pill these badges were designed to be. */
+  position: absolute;
+  background: #fff;
+  border-radius: 11px;
+  padding: 10px 15px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
 .fcard.fc1 {
   top: 55px;
   left: -15px;
@@ -1422,6 +1444,20 @@ section {
   border-color: var(--primary);
 }
 .fcard {
+  /* .fcard is also defined earlier (line ~441) for the small
+     absolutely-positioned floating badges over the homepage hero
+     image (.fcard.fc1/.fc2/.fc3). That rule sets position:absolute,
+     display:flex, align-items:center and gap:9px — properties this
+     rule never redeclared, so they leaked through the cascade into
+     every *plain* .fcard "info card" (Visit Us / Call Us / etc. on
+     the contact and about pages, and the two info cards on the
+     homepage). The result: cards that should stack icon → heading →
+     text vertically in a normal grid column instead got pulled out of
+     the page flow entirely and squashed into a horizontal flex row.
+     Resetting both here scopes the fix to this rule without touching
+     the hero-badge rule or any template. */
+  position: static;
+  display: block;
   background: #fff;
   border-radius: 18px;
   padding: 32px;
