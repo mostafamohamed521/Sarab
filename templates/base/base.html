@@ -308,19 +308,20 @@ function sidebarQty(id, delta) {
     sidebarRemove(id);
   } else {
     apiPost(URL_CART_UPDATE+id+'/', {quantity:newQty}).then(d=>{
-      qEl.textContent = newQty;
-      updateBadge(d.cart_count);
+      // Previously only updated the quantity number and the badge —
+      // the Subtotal/Tax/Delivery/Total shown right below in the same
+      // sidebar footer were never refreshed, so they went stale the
+      // moment you used +/- here (cart.html's own +/- buttons already
+      // reload for this exact reason; matching that here instead of
+      // inventing a second, partial-update code path).
+      location.reload();
     });
   }
 }
 
 function sidebarRemove(id) {
   apiPost(URL_CART_REMOVE+id+'/', {}).then(d=>{
-    const row = document.getElementById('si-'+id);
-    if (row) row.remove();
-    updateBadge(d.cart_count);
-    toast('Item removed from cart');
-    if (d.cart_count === 0) location.reload();
+    location.reload();
   });
 }
 
@@ -333,12 +334,22 @@ document.addEventListener('click', function(e) {
   const qty  = parseInt(btn.dataset.qty || 1);
   const orig = btn.innerHTML;
   apiPost(URL_CART_ADD+id+'/', {quantity:qty}).then(d=>{
+    // Previously showed the checkmark/success animation and a
+    // generic "Added to cart!" toast unconditionally, even on an
+    // error response (e.g. the item became unavailable after the
+    // page loaded) — the error message was overwritten rather than
+    // shown, and there was no .catch() at all, so a non-JSON error
+    // response (like a 404 page) would fail silently.
+    if (d.status === 'error') {
+      toast(d.message || 'Could not add item to cart.', 'error');
+      return;
+    }
     updateBadge(d.cart_count);
     toast(d.message || 'Added to cart!');
     btn.innerHTML = '<i class="fas fa-check"></i>';
     btn.style.background = 'linear-gradient(135deg,#2d6a4f,#1a4a35)';
     setTimeout(()=>{ btn.innerHTML=orig; btn.style.background=''; }, 1800);
-  });
+  }).catch(()=>{ toast('Could not add item to cart.', 'error'); });
 });
 
 /* ── WISHLIST (global) ── */
@@ -359,7 +370,7 @@ document.addEventListener('click', function(e) {
       ico.style.color = '';
       toast('Removed from wishlist');
     }
-  });
+  }).catch(()=>{ toast('Could not update wishlist.', 'error'); });
   {% else %}
   window.location.href = '{% url "login" %}?next='+window.location.pathname;
   {% endif %}
