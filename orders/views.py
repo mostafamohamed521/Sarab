@@ -31,6 +31,23 @@ def checkout_view(request):
     return render(request, 'orders/checkout.html', context)
 
 
+def _resolve_coupon(coupon_code, subtotal):
+    """Looks up and validates a coupon code against the cart subtotal.
+    Returns (coupon_or_None, discount_amount) — never raises, since an
+    invalid/expired/missing code should just mean "no discount", not
+    a failed checkout."""
+    if not coupon_code:
+        return None, 0
+    try:
+        candidate = Coupon.objects.select_for_update().get(code=coupon_code)
+    except Coupon.DoesNotExist:
+        return None, 0
+    valid, _reason = candidate.is_valid_for(subtotal)
+    if not valid:
+        return None, 0
+    return candidate, candidate.calculate_discount(subtotal)
+
+
 def place_order(request):
     if request.method != 'POST':
         return redirect('checkout')
@@ -51,23 +68,14 @@ def place_order(request):
 
     coupon_code = data.get('coupon_code', '').strip().upper()
 
-    # Row-locked so two simultaneous checkouts can't both pass the
-    # max_uses check before either commits (a coupon capped at N uses
-    # could otherwise be redeemed N+1+ times by concurrent requests).
-    # select_for_update() is a no-op hint on SQLite but takes effect on
-    # Postgres/MySQL in a real deployment, which is what this guards.
+    # Row-locked (inside _resolve_coupon's select_for_update) so two
+    # simultaneous checkouts can't both pass the max_uses check before
+    # either commits (a coupon capped at N uses could otherwise be
+    # redeemed N+1+ times by concurrent requests). select_for_update()
+    # is a no-op hint on SQLite but takes effect on Postgres/MySQL in
+    # a real deployment, which is what this guards.
     with transaction.atomic():
-        coupon = None
-        discount = 0
-        if coupon_code:
-            try:
-                candidate = Coupon.objects.select_for_update().get(code=coupon_code)
-                valid, _reason = candidate.is_valid_for(cart.get_subtotal())
-                if valid:
-                    coupon = candidate
-                    discount = coupon.calculate_discount(cart.get_subtotal())
-            except Coupon.DoesNotExist:
-                pass
+        coupon, discount = _resolve_coupon(coupon_code, cart.get_subtotal())
 
         order = Order.objects.create(
             user=request.user if request.user.is_authenticated else None,
