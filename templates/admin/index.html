@@ -1,0 +1,88 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div id="content-main">
+
+  {% if dashboard_stats %}
+  <div class="module" style="margin-bottom:24px;">
+    <h2 style="margin:0 0 12px;">{% translate "Overview" %}</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:14px;">
+      {% for stat in dashboard_stats %}
+      <div style="flex:1 1 160px;min-width:160px;background:#fff;border:1px solid #ddd;border-radius:8px;padding:16px 18px;">
+        <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.6px;color:#666;margin-bottom:6px;">{{ stat.label }}</div>
+        {% if stat.url %}
+          <a href="{{ stat.url }}" style="font-size:1.6rem;font-weight:700;text-decoration:none;">{{ stat.value }}</a>
+        {% else %}
+          <div style="font-size:1.6rem;font-weight:700;">{{ stat.value }}</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if recent_orders %}
+  <div class="module" style="margin-bottom:24px;">
+    <h2 style="margin:0 0 12px;">{% translate "Recent Orders" %}</h2>
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr style="text-align:left;border-bottom:1px solid #ddd;">
+          <th style="padding:6px 10px;">{% translate "Order" %}</th>
+          <th style="padding:6px 10px;">{% translate "Customer" %}</th>
+          <th style="padding:6px 10px;">{% translate "Total" %}</th>
+          <th style="padding:6px 10px;">{% translate "Status" %}</th>
+          <th style="padding:6px 10px;">{% translate "Placed" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in recent_orders %}
+        <tr style="border-bottom:1px solid #eee;">
+          <td style="padding:6px 10px;"><a href="/admin/orders/order/{{ order.pk }}/change/">{{ order.order_number }}</a></td>
+          <td style="padding:6px 10px;">{{ order.full_name }}</td>
+          <td style="padding:6px 10px;">${{ order.total }}</td>
+          <td style="padding:6px 10px;">{{ order.get_status_display }}</td>
+          <td style="padding:6px 10px;">{{ order.created_at|date:"M d, g:i A" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if app_list %}
+    {% for app in app_list %}
+      <div class="app-{{ app.app_label }} module">
+        <table>
+          <caption>
+            <a href="{{ app.app_url }}" class="section">{{ app.name }}</a>
+          </caption>
+          {% for model in app.models %}
+            <tr class="model-{{ model.object_name|lower }}">
+              {% if model.admin_url %}
+                <th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>
+              {% else %}
+                <th scope="row">{{ model.name }}</th>
+              {% endif %}
+
+              {% if model.add_url %}
+                <td><a href="{{ model.add_url }}" class="addlink">{% translate 'Add' %}</a></td>
+              {% else %}
+                <td></td>
+              {% endif %}
+
+              {% if model.admin_url %}
+                <td><a href="{{ model.admin_url }}" class="changelink">{% translate 'Change' %}</a></td>
+              {% else %}
+                <td></td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>{% translate "You don't have permission to view or edit anything." %}</p>
+  {% endif %}
+</div>
+{% endblock %}
