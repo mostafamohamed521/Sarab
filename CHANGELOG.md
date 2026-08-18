@@ -61,6 +61,18 @@ deploying it, and check `djangorestframework`/`Pillow`/`stripe` compatibility wi
 at the same time — DRF's own floor here (`>=3.14`) is already unaffected by any known CVE, so
 that one's fine as-is either way.
 
+## New — Deployment guidance for genuinely card-free free-tier hosting
+
+Verified via search (current information, not training-data recall): Render's free tier
+doesn't officially require a card, but has real, recent user reports of unexpected charges.
+Added a full PythonAnywhere deployment walkthrough to `README.md` as the safer choice when
+"zero payment details, no exceptions" genuinely matters — confirmed card-free across every
+source checked, including PythonAnywhere's own documentation. Documented its two real
+trade-offs honestly rather than glossing over them: free web apps expire after a month of
+inactivity (needs a periodic manual renewal click), and outbound internet access is
+allowlisted, so Stripe payments likely won't work without requesting that allowlisting or
+upgrading — everything else in the app is unaffected either way.
+
 ## New — Admin dashboard overhaul
 
 The Django Admin dashboard previously was just the bare, default app/model list with no
