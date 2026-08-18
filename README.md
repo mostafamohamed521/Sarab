@@ -253,4 +253,64 @@ and `whitenoise` are already in `requirements.txt`, and `config/settings.py` pic
 **Known limits of Render's free tier:** the service sleeps after 15 minutes with no traffic
 (the first request after that takes a few seconds to wake it up), and the free Postgres
 database expires after 90 days unless upgraded. Fine for testing/demos; budget for the paid
-tier before relying on this for real traffic.
+tier before relying on this for real traffic. ⚠️ Render's own free-tier terms don't require a
+card, but there are user reports of unexpected charges on "free" accounts — if you want a
+platform with a cleaner zero-card track record, use PythonAnywhere below instead.
+
+## Deploying to PythonAnywhere (free tier, genuinely no card required)
+
+Unlike Render, PythonAnywhere's free tier has no `render.yaml`-style one-click flow — you set
+it up through their web dashboard and a browser-based Bash console. It also doesn't use
+gunicorn or Postgres at all; it serves Django through its own WSGI infrastructure, and the
+project's default SQLite database works as-is (new free accounts don't get MySQL access
+either, so there's nothing extra to configure there).
+
+1. Sign up at pythonanywhere.com (free "Beginner" account — no payment details asked for).
+2. Open a **Bash console** from the dashboard and clone your repo:
+   ```bash
+   git clone <your-repo-url> sarab
+   cd sarab
+   python3.11 -m venv venv   # use whichever Python 3.x version PythonAnywhere currently
+                              # offers when you sign up — check the Web tab's version
+                              # dropdown in step 3 and match it here
+   source venv/bin/activate
+   pip install -r requirements.txt
+   python manage.py migrate
+   python manage.py collectstatic --noinput
+   ```
+3. Go to the **Web** tab → **Add a new web app** → choose **Manual configuration** → pick the
+   same Python version as your virtualenv.
+4. Set the **Virtualenv** path to `/home/<your-username>/sarab/venv`.
+5. Open the generated **WSGI configuration file** (linked from the Web tab) and replace its
+   contents with:
+   ```python
+   import os, sys
+   sys.path.insert(0, '/home/<your-username>/sarab')
+   os.environ['DJANGO_SETTINGS_MODULE'] = 'config.settings'
+   os.environ['DJANGO_DEBUG'] = 'False'
+   os.environ['DJANGO_SECRET_KEY'] = '<a long random string — generate one, don\'t reuse the dev default>'
+   os.environ['DJANGO_ALLOWED_HOSTS'] = '<your-username>.pythonanywhere.com'
+   # Stripe (optional — see the note below on outbound requests first)
+   os.environ['STRIPE_PUBLISHABLE_KEY'] = 'pk_...'
+   os.environ['STRIPE_SECRET_KEY'] = 'sk_...'
+   os.environ['STRIPE_WEBHOOK_SECRET'] = 'whsec_...'
+   from django.core.wsgi import get_wsgi_application
+   application = get_wsgi_application()
+   ```
+6. Back in the **Web** tab, under **Static files**, add two mappings:
+   - URL `/static/` → Directory `/home/<your-username>/sarab/staticfiles`
+   - URL `/media/` → Directory `/home/<your-username>/sarab/media`
+7. Click the big green **Reload** button. Your site is live at
+   `https://<your-username>.pythonanywhere.com`.
+
+**Two honest trade-offs, not present on Render:**
+- Free-tier web apps expire after **1 month** of inactivity — log into the dashboard and click
+  "Run until 3 months from today" periodically to keep it alive. This project's account
+  cleanup/rate-limiting logic is unaffected either way; this is purely a PythonAnywhere hosting
+  quirk.
+- Free accounts have **restricted outbound internet access** (only a small allowlist of
+  domains). Stripe's API is very likely not on that allowlist by default, so payments may not
+  work until you either request it be whitelisted (PythonAnywhere's support has historically
+  granted this for free accounts on request) or upgrade to a paid plan (which grants
+  unrestricted outbound access). Everything else in the app — browsing, cart, reservations,
+  reviews, the admin dashboard — works fully regardless, since none of it makes outbound calls.
