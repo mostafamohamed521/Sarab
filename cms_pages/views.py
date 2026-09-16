@@ -1,4 +1,8 @@
+import json
+import requests
 from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from .models import FAQ, BlogPost
 
 
@@ -36,6 +40,42 @@ def blog_detail(request, slug):
     post = get_object_or_404(BlogPost, slug=slug, is_published=True)
     related = BlogPost.objects.filter(is_published=True).exclude(pk=post.pk)[:3]
     return render(request, 'cms_pages/blog_detail.html', {'post': post, 'related': related})
+
+
+N8N_WEBHOOK_URL = "https://sarab-support.app.n8n.cloud/webhook/sarab-support"
+
+
+def support_page(request):
+    if not request.session.session_key:
+        request.session.create()
+    return render(request, "cms_pages/support.html")
+
+
+@require_POST
+def support_chat_api(request):
+    data = json.loads(request.body)
+    message = data.get("message", "").strip()
+
+    if not request.session.session_key:
+        request.session.create()
+    session_id = request.session.session_key
+
+    if not message:
+        return JsonResponse({"error": "Message cannot be empty"}, status=400)
+
+    try:
+        resp = requests.post(
+            N8N_WEBHOOK_URL,
+            json={"message": message, "session_id": session_id},
+            timeout=20,
+        )
+        resp.raise_for_status()
+        reply = resp.json().get("reply", "Sorry, no response right now.")
+    except requests.RequestException:
+        reply = "There was a problem connecting to the support service. Please try again."
+
+    return JsonResponse({"reply": reply})
+
 
 FAQ_DEFAULTS = [
     ('What are your delivery hours?', 'We deliver Wednesday through Sunday from 10 AM to 10:30 PM. Fridays and Saturdays until 11 PM.'),

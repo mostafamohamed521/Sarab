@@ -10,4 +10,6 @@ urlpatterns = [
     path('refund-policy/', views.refund_policy, name='refund_policy'),
     path('blog/', views.blog_list, name='blog_list'),
     path('blog/<slug:slug>/', views.blog_detail, name='blog_detail'),
+    path("support/", views.support_page, name="support_page"),
+    path("support/chat/", views.support_chat_api, name="support_chat_api"),
 ]
