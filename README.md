@@ -97,13 +97,17 @@ sarab_project/
 ├── cms_pages/           About, Contact, Blog, FAQ, legal pages
 ├── api/                 REST API (DRF) — all resources
 ├── templates/           All HTML templates (Django)
-├── static/               CSS, JS, images
+├── static/               CSS, JS, images (css/responsive.css = mobile layer, css/support-chat.css + js/support-chat.js = chat page)
+├── n8n/                  Importable n8n workflow for the AI support agent + setup guide
+├── deploy/               PythonAnywhere WSGI template + one-shot setup script
+├── DEPLOY_PYTHONANYWHERE.md  Step-by-step PythonAnywhere guide (start here to publish)
 ├── tests.py              124 automated tests
 ├── .env.example           Documented environment variables for deployment
 ├── CHANGELOG.md           Full audit trail of what was reviewed and fixed
-├── render.yaml            Render Blueprint (one-click deploy config)
-├── build.sh               Render build script (install, collectstatic, migrate)
-└── requirements.txt
+├── render.yaml            Render Blueprint (only if you deploy to Render)
+├── build.sh               Render build script (uses requirements-render.txt)
+├── requirements.txt       Runtime dependencies (PythonAnywhere-ready)
+└── requirements-render.txt  Adds gunicorn + psycopg2 for Render
 ```
 
 ## REST API Endpoints
@@ -170,11 +174,25 @@ Invoice · Table Reservation & History · Login/Register/Password Reset · Profi
 · About/Contact/FAQ/Blog/Legal pages — 50 routes total, all verified to render and connect to a
 real backend (see `CHANGELOG.md`).
 
+## AI Customer Support Chat (n8n)
+
+The **Customer Support** page (`/pages/support/`, linked under *Pages* in the navbar and in the footer)
+is a chat UI (user/agent bubbles, input + send button, typing indicator, suggestion chips, mobile layout)
+wired to an AI agent that runs in **n8n**.
+
+- Workflow: `n8n/sarab-support-workflow.json` — Webhook → AI Agent (system prompt limited to Sarab topics,
+  session memory keyed by `session_id`, tools for the customer's own orders/reservations and menu search)
+  → Respond to Webhook `{ "reply": "..." }`. Setup: `n8n/README.md`.
+- Django side: `cms_pages/views.py` (`support_page`, `support_chat_api`), `static/js/support-chat.js`.
+- Config (env): `N8N_WEBHOOK_URL`, `SUPPORT_CHAT_MODE` (`server` | `browser`), `N8N_TIMEOUT`.
+- Tests: `python manage.py test cms_pages -v 2` (n8n is mocked).
+
 ## Running Tests
 
 ```bash
-python manage.py test tests -v 2
-# Expected: 124 tests, all OK
+python manage.py test tests -v 2      # original suite: 124 tests
+python manage.py test cms_pages -v 2  # support-chat tests
+# or everything at once: python manage.py test
 ```
 
 ## Configuration (environment variables)
@@ -259,6 +277,10 @@ platform with a cleaner zero-card track record, use PythonAnywhere below instead
 
 ## Deploying to PythonAnywhere (free tier, genuinely no card required)
 
+> **Short version:** follow [`DEPLOY_PYTHONANYWHERE.md`](DEPLOY_PYTHONANYWHERE.md) — it uses the `.env` file,
+> `deploy/pa_setup.sh` and `deploy/pythonanywhere_wsgi.py`, and explains the free-plan setting for the AI chat
+> (`SUPPORT_CHAT_MODE=browser`). The manual walkthrough below still works.
+
 Unlike Render, PythonAnywhere's free tier has no `render.yaml`-style one-click flow — you set
 it up through their web dashboard and a browser-based Bash console. It also doesn't use
 gunicorn or Postgres at all; it serves Django through its own WSGI infrastructure, and the
@@ -312,5 +334,6 @@ either, so there's nothing extra to configure there).
   domains). Stripe's API is very likely not on that allowlist by default, so payments may not
   work until you either request it be whitelisted (PythonAnywhere's support has historically
   granted this for free accounts on request) or upgrade to a paid plan (which grants
-  unrestricted outbound access). Everything else in the app — browsing, cart, reservations,
-  reviews, the admin dashboard — works fully regardless, since none of it makes outbound calls.
+  unrestricted outbound access). The AI support chat also needs outbound access to n8n from the server —
+  on a free account set `SUPPORT_CHAT_MODE=browser` (see `DEPLOY_PYTHONANYWHERE.md`). Everything else in the
+  app — browsing, cart, reservations, reviews, the admin dashboard — works fully regardless.
