@@ -14,4 +14,6 @@ urlpatterns = [
     path('auth/', include('rest_framework.urls')),
     path('track/order/<str:order_number>/', views.track_order_public, name='track_order_public'),
     path('track/reservation/<str:confirmation_code>/', views.track_reservation_public, name='track_reservation_public'),
+    path('guest/orders/', views.create_guest_order, name='create_guest_order'),
+    path('guest/reservations/', views.create_guest_reservation, name='create_guest_reservation'),
 ]

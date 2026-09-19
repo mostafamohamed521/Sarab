@@ -11,6 +11,7 @@ from .serializers import (
     CategorySerializer, MenuItemSerializer, OrderSerializer,
     ReservationSerializer, ReviewSerializer,
     PublicOrderTrackingSerializer, PublicReservationTrackingSerializer,
+    GuestOrderCreateSerializer, GuestReservationCreateSerializer,
 )
 from .permissions import IsOwnerOrReadOnly
 
@@ -119,3 +120,26 @@ def track_reservation_public(request, confirmation_code):
     except Reservation.DoesNotExist:
         return Response({'error': 'No reservation found with this code.'}, status=http_status.HTTP_404_NOT_FOUND)
     return Response(PublicReservationTrackingSerializer(reservation).data)
+
+
+# ── Guest order / reservation creation (no login required) ────────────────
+# Lets the AI support chat place an order or book a table directly on
+# behalf of a guest. Price is always computed server-side from the
+# live MenuItem price — never trusted from the request body.
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def create_guest_order(request):
+    serializer = GuestOrderCreateSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    order = serializer.save()
+    return Response(PublicOrderTrackingSerializer(order).data, status=http_status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def create_guest_reservation(request):
+    serializer = GuestReservationCreateSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    reservation = serializer.save()
+    return Response(PublicReservationTrackingSerializer(reservation).data, status=http_status.HTTP_201_CREATED)

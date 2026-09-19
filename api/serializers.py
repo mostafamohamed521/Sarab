@@ -160,6 +160,9 @@ class ReviewSerializer(serializers.ModelSerializer):
     def get_user_name(self, obj):
         return obj.user.get_full_name() or obj.user.email
 
+
+# ── Public tracking (read-only, no login) ─────────────────────────────────
+
 class PublicOrderTrackingSerializer(serializers.ModelSerializer):
     items_summary = serializers.SerializerMethodField()
 
@@ -177,3 +180,69 @@ class PublicReservationTrackingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reservation
         fields = ['confirmation_code', 'status', 'date', 'time', 'guests', 'table_location']
+
+
+# ── Guest order / reservation creation (no login) ─────────────────────────
+# Used by the AI support chat so a guest can place an order or book a
+# table directly through the conversation. Price is always computed
+# server-side from the live MenuItem price — never trusted from input.
+
+class GuestOrderItemInputSerializer(serializers.Serializer):
+    menu_item = serializers.SlugRelatedField(
+        slug_field='slug', queryset=MenuItem.objects.filter(is_available=True)
+    )
+    quantity = serializers.IntegerField(min_value=1, max_value=50)
+
+
+class GuestOrderCreateSerializer(serializers.ModelSerializer):
+    order_items = GuestOrderItemInputSerializer(many=True, write_only=True, required=True)
+
+    class Meta:
+        model = Order
+        fields = [
+            'full_name', 'email', 'phone', 'street_address', 'city', 'state',
+            'zip_code', 'country', 'payment_method', 'notes', 'order_items',
+        ]
+
+    def create(self, validated_data):
+        items_data = validated_data.pop('order_items')
+        subtotal = Decimal('0.00')
+        prepared_items = []
+        for entry in items_data:
+            menu_item = entry['menu_item']
+            quantity = entry['quantity']
+            subtotal += menu_item.price * quantity
+            prepared_items.append((menu_item, quantity))
+
+        tax = (subtotal * TAX_RATE).quantize(Decimal('0.01'))
+        delivery_fee = Decimal('0.00') if subtotal >= FREE_DELIVERY_THRESHOLD else DELIVERY_FEE
+        total = subtotal + tax + delivery_fee
+
+        order = Order.objects.create(
+            user=None,
+            subtotal=subtotal, tax=tax, delivery_fee=delivery_fee,
+            discount=Decimal('0.00'), total=total,
+            **validated_data,
+        )
+        for menu_item, quantity in prepared_items:
+            OrderItem.objects.create(
+                order=order, menu_item=menu_item, name=menu_item.name,
+                price=menu_item.price, quantity=quantity,
+            )
+        return order
+
+
+class GuestReservationCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Reservation
+        fields = ['full_name', 'email', 'phone', 'date', 'time', 'guests', 'occasion', 'special_requests']
+
+    def validate_date(self, value):
+        if value < date.today():
+            raise serializers.ValidationError('Reservation date cannot be in the past.')
+        return value
+
+    def validate_guests(self, value):
+        if value < 1 or value > 20:
+            raise serializers.ValidationError('Guests must be between 1 and 20.')
+        return value
