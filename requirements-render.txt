@@ -1,0 +1,5 @@
+# Extra packages needed ONLY for the Render deployment (see render.yaml / build.sh).
+# Not needed on PythonAnywhere.
+-r requirements.txt
+gunicorn>=21.2
+psycopg2-binary>=2.9
