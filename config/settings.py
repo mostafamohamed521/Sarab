@@ -1,8 +1,35 @@
 import os
-import dj_database_url
 from pathlib import Path
 
+try:  # only needed when DATABASE_URL is set (Postgres on Render etc.)
+    import dj_database_url
+except ImportError:  # pragma: no cover - PythonAnywhere free tier uses SQLite
+    dj_database_url = None
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def _load_dotenv(path):
+    """Tiny .env loader (no extra dependency).
+
+    PythonAnywhere has no dashboard for environment variables, so the easy
+    way to configure the site is a `.env` file next to manage.py. Real
+    environment variables always win over the file.
+    """
+    try:
+        lines = Path(path).read_text(encoding='utf-8').splitlines()
+    except OSError:
+        return
+    for raw in lines:
+        line = raw.strip()
+        if not line or line.startswith('#') or '=' not in line:
+            continue
+        key, _, value = line.partition('=')
+        value = value.strip().strip('"').strip("'")
+        os.environ.setdefault(key.strip(), value)
+
+
+_load_dotenv(BASE_DIR / '.env')
 
 # All secrets/environment-specific values below fall back to their
 # previous hardcoded dev values, so local `runserver` behavior is
@@ -21,6 +48,12 @@ ALLOWED_HOSTS = [h.strip() for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '*').
 _render_host = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if _render_host and _render_host not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(_render_host)
+
+# Needed for HTTPS POSTs (login, chat, checkout) on a custom domain.
+# Comma-separated, with scheme: https://you.pythonanywhere.com
+CSRF_TRUSTED_ORIGINS = [
+    o.strip() for o in os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -80,7 +113,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # for the Postgres instance they provision. Falls back to the local
 # sqlite file when it's not set, so `runserver` locally is unaffected.
 _database_url = os.environ.get('DATABASE_URL')
-if _database_url:
+if _database_url and dj_database_url:
     DATABASES = {'default': dj_database_url.parse(_database_url, conn_max_age=600)}
 else:
     DATABASES = {
@@ -111,6 +144,13 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # compression + far-future cache headers — no separate static file
 # server or S3 bucket needed for a platform like Render.
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Don't crash a page with a 500 if a static file is missing from the manifest.
+WHITENOISE_MANIFEST_STRICT = False
+# `manage.py test` runs with DEBUG=False and no collectstatic manifest, so use
+# the plain storage there.
+import sys  # noqa: E402
+if 'test' in sys.argv:
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -131,6 +171,20 @@ STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', 'whsec_your_webh
 
 # Cart session key
 CART_SESSION_ID = 'cart'
+
+# ── AI customer-support chat (n8n) ────────────────────────────────────────
+# Webhook URL of the n8n workflow (see n8n/sarab-support-workflow.json).
+N8N_WEBHOOK_URL = os.environ.get(
+    'N8N_WEBHOOK_URL',
+    'https://sarab-support.app.n8n.cloud/webhook/sarab-support',
+)
+# 'server'  -> browser calls Django, Django calls n8n (default; needs
+#              unrestricted outbound internet, i.e. any paid PythonAnywhere plan).
+# 'browser' -> browser calls n8n directly. Use this on a FREE PythonAnywhere
+#              account, whose servers can't reach n8n.cloud. Requires CORS to be
+#              allowed on the n8n Webhook node (Options -> Allowed Origins).
+SUPPORT_CHAT_MODE = os.environ.get('SUPPORT_CHAT_MODE', 'server').lower()
+N8N_TIMEOUT = int(os.environ.get('N8N_TIMEOUT', '25'))
 
 # REST Framework
 REST_FRAMEWORK = {
