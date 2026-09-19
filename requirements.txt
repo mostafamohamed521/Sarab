@@ -1,8 +1,8 @@
+# Runtime dependencies (works on PythonAnywhere as-is; SQLite is the default DB)
 Django>=4.2.30,<5.0
 djangorestframework>=3.14
 Pillow>=10.0
 stripe>=7.0
-gunicorn>=21.2
-psycopg2-binary>=2.9
-dj-database-url>=2.1
-whitenoise>=6.6
+requests>=2.31          # calls the n8n webhook from the support chat
+whitenoise>=6.6         # static files (also fine next to PythonAnywhere's static mapping)
+dj-database-url>=2.1    # only used if DATABASE_URL is set
