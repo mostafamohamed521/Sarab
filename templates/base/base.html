@@ -3,7 +3,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#e8281a">
   <title>{% block title %}Sarab - Fast Food & Restaurant{% endblock %}</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet"/>
   <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet"/>
@@ -13,12 +14,13 @@
   <link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}"/>
   <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
   <link rel="stylesheet" href="{% static 'css/sarab-extra.css' %}"/>
+  <link rel="stylesheet" href="{% static 'css/responsive.css' %}"/>
   {% block extra_css %}{% endblock %}
 </head>
 <body>
 
 {% if messages %}
-<div style="position:fixed;top:80px;right:18px;z-index:99998;max-width:360px;">
+<div class="flash-wrap" style="position:fixed;top:80px;right:18px;z-index:99998;max-width:360px;">
   {% for message in messages %}
   <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %} alert-dismissible shadow" style="border-radius:12px;font-size:.87rem;">
     {{ message }}<button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
@@ -189,7 +191,7 @@
 </div>
 
 <!-- TOAST -->
-<div id="sarabToasts" style="position:fixed;bottom:24px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:8px;"></div>
+<div id="sarabToasts" class="toast-wrap" style="position:fixed;bottom:24px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:8px;"></div>
 
 {% block content %}{% endblock %}
 
@@ -217,6 +219,7 @@
           <li><a href="{% url 'make_reservation' %}"><i class="fas fa-chevron-right"></i>Reservation</a></li>
           <li><a href="{% url 'blog_list' %}"><i class="fas fa-chevron-right"></i>Blog</a></li>
           <li><a href="{% url 'contact' %}"><i class="fas fa-chevron-right"></i>Contact</a></li>
+          <li><a href="{% url 'support_page' %}"><i class="fas fa-chevron-right"></i>Customer Support</a></li>
         </ul>
       </div>
       <div class="col-sm-6 col-lg-2">
@@ -270,7 +273,7 @@ const URL_WISHLIST    = '{% url "toggle_wishlist" 0 %}'.replace('/0/','/');
 function toast(msg, type='success') {
   const c = document.getElementById('sarabToasts');
   const t = document.createElement('div');
-  t.style.cssText = 'background:var(--dark);color:#fff;padding:13px 20px;border-radius:12px;font-size:.86rem;display:flex;align-items:center;gap:10px;box-shadow:0 8px 28px rgba(0,0,0,.25);animation:toastIn .3s ease;border-left:4px solid '+(type==='success'?'#4ade80':'var(--primary)')+';min-width:240px;max-width:340px;';
+  t.style.cssText = 'background:var(--dark);color:#fff;padding:13px 20px;border-radius:12px;font-size:.86rem;display:flex;align-items:center;gap:10px;box-shadow:0 8px 28px rgba(0,0,0,.25);animation:toastIn .3s ease;border-left:4px solid '+(type==='success'?'#4ade80':'var(--primary)')+';min-width:0;max-width:min(340px,calc(100vw - 32px));';
   t.innerHTML = '<i class="fas fa-'+(type==='success'?'check-circle':'exclamation-circle')+'"></i>'+msg;
   c.appendChild(t);
   setTimeout(()=>t.remove(), 3600);
