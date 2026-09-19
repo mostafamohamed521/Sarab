@@ -1,8 +1,15 @@
 import json
+import logging
+
 import requests
-from django.shortcuts import render, get_object_or_404
+from django.conf import settings
 from django.http import JsonResponse
+from django.shortcuts import render, get_object_or_404
+from django.urls import reverse
 from django.views.decorators.http import require_POST
+from rest_framework.authtoken.models import Token
+
+from config.ratelimit import is_rate_limited, record_attempt
 from .models import FAQ, BlogPost
 
 
@@ -42,39 +49,96 @@ def blog_detail(request, slug):
     return render(request, 'cms_pages/blog_detail.html', {'post': post, 'related': related})
 
 
-N8N_WEBHOOK_URL = "https://sarab-support.app.n8n.cloud/webhook/sarab-support"
+# ── Customer support chat (n8n AI agent) ──────────────────────────────────
+logger = logging.getLogger(__name__)
+MAX_CHAT_MESSAGE_LEN = 600
+
+
+def _get_session_id(request):
+    if not request.session.session_key:
+        request.session.create()
+    return request.session.session_key
+
+
+def _user_context(request):
+    """Auth token + display name for logged-in users (empty dict for guests).
+
+    The token lets the n8n agent call /api/v1/orders/ and
+    /api/v1/reservations/ AS THIS USER (those endpoints already filter by
+    request.user - see api/views.py) and answer questions about their own
+    real orders/reservations. Guests get nothing, and the agent's system
+    prompt tells it to ask them to log in for anything account-specific.
+    """
+    if not request.user.is_authenticated:
+        return {}
+    token, _ = Token.objects.get_or_create(user=request.user)
+    return {
+        'auth_token': token.key,
+        'user_name': request.user.get_full_name() or request.user.get_username(),
+    }
+
+
+def _extract_reply(data):
+    """n8n can answer {"reply": ...}, [{"reply": ...}] or the raw agent
+    output {"output": ...}; accept all of them."""
+    if isinstance(data, list):
+        data = data[0] if data else {}
+    if isinstance(data, dict):
+        for key in ('reply', 'output', 'text', 'message'):
+            value = data.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+    return None
 
 
 def support_page(request):
-    if not request.session.session_key:
-        request.session.create()
-    return render(request, "cms_pages/support.html")
+    session_id = _get_session_id(request)
+    chat_config = {
+        'mode': settings.SUPPORT_CHAT_MODE,
+        'serverUrl': reverse('support_chat_api'),
+        'sessionId': session_id,
+        'maxLength': MAX_CHAT_MESSAGE_LEN,
+    }
+    if settings.SUPPORT_CHAT_MODE == 'browser':
+        # Browser talks to n8n directly (free PythonAnywhere accounts can't
+        # reach n8n.cloud from the server). Only the user's own token is sent.
+        chat_config['webhookUrl'] = settings.N8N_WEBHOOK_URL
+        chat_config['user'] = _user_context(request)
+    return render(request, 'cms_pages/support.html', {'chat_config': chat_config})
 
 
 @require_POST
 def support_chat_api(request):
-    data = json.loads(request.body)
-    message = data.get("message", "").strip()
+    try:
+        data = json.loads(request.body or b'{}')
+    except (ValueError, UnicodeDecodeError):
+        return JsonResponse({'error': 'Invalid request.'}, status=400)
 
-    if not request.session.session_key:
-        request.session.create()
-    session_id = request.session.session_key
-
+    message = str(data.get('message', '')).strip() if isinstance(data, dict) else ''
     if not message:
-        return JsonResponse({"error": "Message cannot be empty"}, status=400)
+        return JsonResponse({'error': 'Message cannot be empty'}, status=400)
+    message = message[:MAX_CHAT_MESSAGE_LEN]
+
+    # The LLM costs money per call - keep scripted abuse in check.
+    if is_rate_limited(request, 'support_chat', max_attempts=30, window_seconds=300):
+        return JsonResponse({'error': 'Too many messages - please wait a few minutes.'}, status=429)
+    record_attempt(request, 'support_chat', window_seconds=300)
+
+    payload = {'message': message, 'session_id': _get_session_id(request)}
+    payload.update(_user_context(request))
 
     try:
-        resp = requests.post(
-            N8N_WEBHOOK_URL,
-            json={"message": message, "session_id": session_id},
-            timeout=20,
-        )
+        resp = requests.post(settings.N8N_WEBHOOK_URL, json=payload, timeout=settings.N8N_TIMEOUT)
         resp.raise_for_status()
-        reply = resp.json().get("reply", "Sorry, no response right now.")
-    except requests.RequestException:
-        reply = "There was a problem connecting to the support service. Please try again."
+        reply = _extract_reply(resp.json())
+    except (requests.RequestException, ValueError):
+        logger.exception('n8n support webhook call failed')
+        return JsonResponse(
+            {'error': 'There was a problem connecting to the support service. Please try again.'},
+            status=502,
+        )
 
-    return JsonResponse({"reply": reply})
+    return JsonResponse({'reply': reply or 'Sorry, I have no response right now.'})
 
 
 FAQ_DEFAULTS = [
