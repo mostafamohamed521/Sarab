@@ -1,0 +1,127 @@
+/* ==========================================================================
+   Sarab — responsive layer
+   Loaded LAST in base.html so it can override style.css / sarab-extra.css.
+   Mobile-first fixes for phones (<= 575px) and small tablets (<= 991px).
+   ========================================================================== */
+
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { overflow-x: hidden; }
+img, video, canvas, iframe { max-width: 100%; }
+table { max-width: 100%; }
+.table-responsive, .tbl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* iOS zooms the page when a focused field has font-size < 16px */
+@media (max-width: 767.98px) {
+  input:not([type=checkbox]):not([type=radio]):not([type=range]),
+  select, textarea { font-size: 16px !important; }
+}
+
+/* ---------- Tablets & below ---------- */
+@media (max-width: 991.98px) {
+  /* expanded mobile menu: readable, scrollable, tap-friendly */
+  #nav .navbar-collapse {
+    max-height: calc(100dvh - 90px);
+    overflow-y: auto;
+    padding: 6px 0 14px;
+  }
+  #nav .navbar-nav { align-items: stretch; }
+  #nav .nav-link { padding: 12px 6px !important; }
+  #nav .navbar-collapse > .d-flex {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 8px !important;
+    padding-top: 10px;
+    border-top: 1px solid #f0f0f0;
+  }
+  #nav .dropdown-menu { box-shadow: none !important; background: #fafafa; }
+}
+
+/* ---------- Phones ---------- */
+@media (max-width: 575.98px) {
+  /* Bootstrap's g-5 (3rem gutter) is wider than the container padding and
+     pushes the whole page ~13px sideways. Keep gutters inside the padding. */
+  .container, .container-fluid { padding-left: 14px; padding-right: 14px; }
+  .row.g-5, .row.gx-5, .row.g-4, .row.gx-4 { --bs-gutter-x: 1.5rem; }
+  .row.g-5, .row.gy-5 { --bs-gutter-y: 1.75rem; }
+
+  section { padding-top: 44px; padding-bottom: 44px; }
+
+  /* top bar: keep only the promo + socials */
+  #topbar .top-contact { display: none !important; }
+  #topbar .container > .d-flex { justify-content: center !important; }
+  #topbar .container .d-flex.align-items-center.gap-3 { gap: 12px !important; }
+
+  /* navbar */
+  #nav .bname { font-size: 1.35rem; }
+  #nav .bsub { font-size: .55rem; letter-spacing: 1px; }
+  #nav .bico { width: 38px; height: 38px; font-size: 1rem; }
+
+  /* flash messages + toasts stay on-screen */
+  .flash-wrap { top: 70px !important; left: 12px !important; right: 12px !important; max-width: none !important; }
+  .toast-wrap { left: 12px !important; right: 12px !important; bottom: calc(14px + env(safe-area-inset-bottom)) !important; align-items: stretch; }
+
+  /* cart drawer fills the phone */
+  #cartSidebar { width: 100vw !important; height: 100dvh !important; }
+  #cartSidebar .sidebar-item { padding: 12px 14px !important; }
+
+  /* search overlay */
+  .sovbox { width: 100%; padding: 0 14px; }
+  .sovcats { gap: 8px; }
+
+  /* headings & banners */
+  .page-banner { padding-top: 46px; padding-bottom: 40px; }
+  .page-banner .stitle, .stitle { font-size: 1.75rem; line-height: 1.25; }
+  .sdesc { font-size: .9rem; }
+  .htitle { font-size: 2.1rem; }
+
+  /* buttons: comfortable thumb targets, allow wrapping */
+  .btn-red, .btn-outline-red, .btn-yellow, .nav-cta { min-height: 44px; }
+  .btn-red { padding-left: 20px; padding-right: 20px; }
+
+  /* generic 2-column form rows collapse */
+  .form-row, .frow, .two-col { grid-template-columns: 1fr !important; flex-direction: column; }
+
+  /* back-to-top clears the iOS home bar */
+  #btt { right: 14px; bottom: calc(16px + env(safe-area-inset-bottom)); }
+
+  /* footer */
+  footer { text-align: left; }
+  .fbot .d-flex { justify-content: center !important; text-align: center; }
+  .fbot a { margin: 0 8px; }
+}
+
+/* ---------- Very small phones (iPhone SE / 320px) ---------- */
+@media (max-width: 359.98px) {
+  #nav .bsub { display: none; }
+  .stitle, .page-banner .stitle { font-size: 1.5rem; }
+  .htitle { font-size: 1.9rem; }
+}
+
+/* ---------- Landscape phones: don't let fixed layers eat the screen ---------- */
+@media (max-height: 480px) and (orientation: landscape) {
+  #nav .navbar-collapse { max-height: calc(100dvh - 70px); }
+  .chat-window { height: 55dvh !important; min-height: 180px !important; }
+}
+
+/* ---------- Cart page rows (phones) ---------- */
+@media (max-width: 575.98px) {
+  .cart-row {
+    display: grid !important;
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "img  info  rm"
+      "img  qty   total";
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 8px;
+    padding: 14px !important;
+  }
+  .cart-row > .cart-row-img { grid-area: img; width: 64px !important; height: 64px !important; }
+  .cart-row > div:not(.qty-ctrl):not(.cart-row-total) { grid-area: info; }
+  .cart-row > .qty-ctrl { grid-area: qty; justify-self: start; }
+  .cart-row > .cart-row-total { grid-area: total; margin-left: 0 !important; min-width: 0; }
+  .cart-row > .btn-remove { grid-area: rm; justify-self: end; align-self: start; }
+
+  /* promo-code / newsletter style "input + button" rows must not push past the card */
+  .fctrl, #cpnInput { min-width: 0; }
+}
