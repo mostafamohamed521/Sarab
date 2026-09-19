@@ -159,3 +159,21 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def get_user_name(self, obj):
         return obj.user.get_full_name() or obj.user.email
+
+class PublicOrderTrackingSerializer(serializers.ModelSerializer):
+    items_summary = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = ['order_number', 'status', 'estimated_delivery', 'items_summary', 'created_at']
+
+    def get_items_summary(self, obj):
+        return [f"{item.quantity}x {item.name}" for item in obj.items.all()]
+
+
+class PublicReservationTrackingSerializer(serializers.ModelSerializer):
+    table_location = serializers.CharField(source='table.location', default='', read_only=True)
+
+    class Meta:
+        model = Reservation
+        fields = ['confirmation_code', 'status', 'date', 'time', 'guests', 'table_location']

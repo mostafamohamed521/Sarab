@@ -12,4 +12,6 @@ router.register(r'reviews', views.ReviewViewSet, basename='review')
 urlpatterns = [
     path('', include(router.urls)),
     path('auth/', include('rest_framework.urls')),
+    path('track/order/<str:order_number>/', views.track_order_public, name='track_order_public'),
+    path('track/reservation/<str:confirmation_code>/', views.track_reservation_public, name='track_reservation_public'),
 ]

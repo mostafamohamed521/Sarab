@@ -1,5 +1,8 @@
 from django.db.models import Avg, Count, Q
 from rest_framework import viewsets, permissions, filters
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework import status as http_status
 from menu.models import Category, MenuItem
 from orders.models import Order
 from reservations.models import Reservation
@@ -7,6 +10,7 @@ from reviews.models import Review
 from .serializers import (
     CategorySerializer, MenuItemSerializer, OrderSerializer,
     ReservationSerializer, ReviewSerializer,
+    PublicOrderTrackingSerializer, PublicReservationTrackingSerializer,
 )
 from .permissions import IsOwnerOrReadOnly
 
@@ -89,3 +93,29 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+# ── Public tracking endpoints (no login required) ─────────────────────────
+# Used by the AI support chat so a guest can check an order/reservation
+# by its number/code alone. Deliberately returns only non-sensitive
+# fields (status, date/time, item summary) — never the customer's name,
+# email, phone, address or payment details.
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def track_order_public(request, order_number):
+    try:
+        order = Order.objects.prefetch_related('items').get(order_number=order_number.upper())
+    except Order.DoesNotExist:
+        return Response({'error': 'No order found with this number.'}, status=http_status.HTTP_404_NOT_FOUND)
+    return Response(PublicOrderTrackingSerializer(order).data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def track_reservation_public(request, confirmation_code):
+    try:
+        reservation = Reservation.objects.select_related('table').get(confirmation_code=confirmation_code.upper())
+    except Reservation.DoesNotExist:
+        return Response({'error': 'No reservation found with this code.'}, status=http_status.HTTP_404_NOT_FOUND)
+    return Response(PublicReservationTrackingSerializer(reservation).data)
